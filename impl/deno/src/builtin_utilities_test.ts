@@ -651,6 +651,114 @@ Deno.test("utilities: transforms", async () => {
   );
 });
 
+const FILTER_REGISTRATIONS = [
+  "blur",
+  "brightness",
+  "contrast",
+  "grayscale",
+  "hue-rotate",
+  "invert",
+  "saturate",
+  "sepia",
+  "drop-shadow",
+].map((n) =>
+  `@property --tw-${n} {\n    syntax: "*";\n    inherits: false;\n  }`
+);
+const BACKDROP_REGISTRATIONS = [
+  "blur",
+  "brightness",
+  "contrast",
+  "grayscale",
+  "hue-rotate",
+  "invert",
+  "opacity",
+  "saturate",
+  "sepia",
+].map((n) =>
+  `@property --tw-backdrop-${n} {\n    syntax: "*";\n    inherits: false;\n  }`
+);
+const FILTER_DECL =
+  "filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);";
+const BACKDROP_VALUE =
+  "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,)";
+const BACKDROP_DECLS = [
+  `-webkit-backdrop-filter: ${BACKDROP_VALUE};`,
+  `backdrop-filter: ${BACKDROP_VALUE};`,
+];
+
+Deno.test("utilities: filters", async () => {
+  const ds = await setup();
+  const filter = (raw: string, ...declarations: string[]) =>
+    expectDecls(ds, raw, [
+      ...FILTER_REGISTRATIONS,
+      ...declarations,
+      FILTER_DECL,
+    ]);
+  const backdrop = (raw: string, ...declarations: string[]) =>
+    expectDecls(ds, raw, [
+      ...BACKDROP_REGISTRATIONS,
+      ...declarations,
+      ...BACKDROP_DECLS,
+    ]);
+  expectDecls(ds, "filter-none", ["filter: none;"]);
+  expectDecls(ds, "filter-[blur(2px)]", ["filter: blur(2px);"]);
+  filter("filter");
+  filter("blur", "--tw-blur: blur(8px);");
+  filter("blur-sm", "--tw-blur: blur(var(--blur-sm));");
+  filter("blur-[2px]", "--tw-blur: blur(2px);");
+  filter("blur-none", "--tw-blur: ;");
+  filter("brightness-50", "--tw-brightness: brightness(50%);");
+  filter("contrast-[.5]", "--tw-contrast: contrast(.5);");
+  filter("saturate-150", "--tw-saturate: saturate(150%);");
+  filter("grayscale", "--tw-grayscale: grayscale(100%);");
+  filter("grayscale-0", "--tw-grayscale: grayscale(0%);");
+  filter("invert-[.25]", "--tw-invert: invert(.25);");
+  filter("sepia", "--tw-sepia: sepia(100%);");
+  filter("hue-rotate-90", "--tw-hue-rotate: hue-rotate(90deg);");
+  filter("-hue-rotate-90", "--tw-hue-rotate: hue-rotate(calc(90deg * -1));");
+  filter(
+    "drop-shadow-lg",
+    "--tw-drop-shadow: drop-shadow(0 4px 4px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));",
+  );
+  filter(
+    "drop-shadow-lg/50",
+    "--tw-drop-shadow: drop-shadow(0 4px 4px var(--tw-drop-shadow-color, color-mix(in oklab, rgb(0 0 0 / 0.15) 50%, transparent)));",
+  );
+  filter(
+    "drop-shadow-[0_0_3px_red,0_0_6px]",
+    "--tw-drop-shadow: drop-shadow(0 0 3px var(--tw-drop-shadow-color, red)) drop-shadow(0 0 6px var(--tw-drop-shadow-color, currentcolor));",
+  );
+  filter("drop-shadow-none", "--tw-drop-shadow: ;");
+  expectDecls(ds, "drop-shadow-red-500", [
+    `@property --tw-drop-shadow-color {\n    syntax: "*";\n    inherits: false;\n  }`,
+    "--tw-drop-shadow-color: var(--color-red-500);",
+  ]);
+  expectDecls(ds, "backdrop-filter-none", [
+    "-webkit-backdrop-filter: none;",
+    "backdrop-filter: none;",
+  ]);
+  backdrop("backdrop-filter");
+  backdrop("backdrop-blur-sm", "--tw-backdrop-blur: blur(var(--blur-sm));");
+  backdrop("backdrop-grayscale", "--tw-backdrop-grayscale: grayscale(100%);");
+  backdrop("backdrop-opacity-50", "--tw-backdrop-opacity: opacity(50%);");
+  backdrop(
+    "-backdrop-hue-rotate-15",
+    "--tw-backdrop-hue-rotate: hue-rotate(calc(15deg * -1));",
+  );
+  expectInvalid(
+    ds,
+    "blur-4",
+    "brightness",
+    "brightness-1.5",
+    "hue-rotate-1.5",
+    "drop-shadow-lg/foo",
+    "drop-shadow-nope",
+    "backdrop-opacity",
+    "backdrop-drop-shadow-lg",
+    "blur-sm/50",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);

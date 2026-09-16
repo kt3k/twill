@@ -8,6 +8,7 @@ import { type AstNode, decl } from "./ast.ts";
 import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
+import { registerFilterUtilities } from "./filters.ts";
 import { registerShadowUtilities } from "./shadows.ts";
 import { registerTransformUtilities } from "./transforms.ts";
 import { isMultipleOfQuarter, isPositiveInteger } from "./utils.ts";
@@ -880,6 +881,12 @@ export function registerBuiltinUtilities(
   // ---------------------------------------------------------------------
 
   registerTransformUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
+  // Filters
+  // ---------------------------------------------------------------------
+
+  registerFilterUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity
