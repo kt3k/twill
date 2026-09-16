@@ -346,6 +346,46 @@ func TestUtilitiesFilters(t *testing.T) {
 	expectInvalid(t, ds, "blur-4", "brightness", "brightness-1.5", "hue-rotate-1.5", "drop-shadow-lg/foo", "drop-shadow-nope", "backdrop-opacity", "backdrop-drop-shadow-lg", "blur-sm/50")
 }
 
+func TestUtilitiesGradients(t *testing.T) {
+	ds := designSystemFor(t, "")
+	reg := func(name, syntax, initial string) string {
+		out := "@property " + name + " {\n    syntax: \"" + syntax + "\";\n    inherits: false;\n"
+		if initial != "" {
+			out += "    initial-value: " + initial + ";\n"
+		}
+		return out + "  }"
+	}
+	gradientRegs := []string{
+		reg("--tw-gradient-position", "*", ""), reg("--tw-gradient-from", "<color>", "#0000"),
+		reg("--tw-gradient-via", "<color>", "#0000"), reg("--tw-gradient-to", "<color>", "#0000"),
+		reg("--tw-gradient-stops", "*", ""), reg("--tw-gradient-via-stops", "*", ""),
+		reg("--tw-gradient-from-position", "<length-percentage>", "0%"),
+		reg("--tw-gradient-via-position", "<length-percentage>", "50%"),
+		reg("--tw-gradient-to-position", "<length-percentage>", "100%"),
+	}
+	stopsDecl := "--tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));"
+	with := func(decls ...string) []string { return append(append([]string{}, gradientRegs...), decls...) }
+	linear := "background-image: linear-gradient(var(--tw-gradient-stops));"
+	expectDecls(t, ds, "bg-linear-to-r", "--tw-gradient-position: to right in oklab;", linear)
+	expectDecls(t, ds, "bg-linear-to-tl/srgb", "--tw-gradient-position: to top left in srgb;", linear)
+	expectDecls(t, ds, "bg-linear-to-r/longer", "--tw-gradient-position: to right in oklch longer hue;", linear)
+	expectDecls(t, ds, "bg-linear-45/[in_hsl]", "--tw-gradient-position: 45deg in hsl;", linear)
+	expectDecls(t, ds, "-bg-linear-45", "--tw-gradient-position: calc(45deg * -1) in oklab;", linear)
+	expectDecls(t, ds, "bg-linear-[30deg]", "--tw-gradient-position: 30deg in oklab;", linear)
+	expectDecls(t, ds, "bg-linear-[to_right,red,blue]", "background-image: linear-gradient(to right,red,blue);")
+	expectDecls(t, ds, "bg-gradient-to-b", "--tw-gradient-position: to bottom in oklab;", linear)
+	expectDecls(t, ds, "bg-radial", "--tw-gradient-position: in oklab;", "background-image: radial-gradient(var(--tw-gradient-stops));")
+	expectDecls(t, ds, "bg-radial-[at_center]", "--tw-gradient-position: at center;", "background-image: radial-gradient(var(--tw-gradient-stops));")
+	expectDecls(t, ds, "bg-conic-90/hsl", "--tw-gradient-position: from 90deg in hsl;", "background-image: conic-gradient(var(--tw-gradient-stops));")
+	expectDecls(t, ds, "from-red-500", with("--tw-gradient-from: var(--color-red-500);", stopsDecl)...)
+	expectDecls(t, ds, "from-red-500/50", with("--tw-gradient-from: color-mix(in oklab, var(--color-red-500) 50%, transparent);", stopsDecl)...)
+	expectDecls(t, ds, "from-10%", with("--tw-gradient-from-position: 10%;")...)
+	expectDecls(t, ds, "via-blue-500", with("--tw-gradient-via: var(--color-blue-500);", "--tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);", "--tw-gradient-stops: var(--tw-gradient-via-stops);")...)
+	expectDecls(t, ds, "to-[2rem]", with("--tw-gradient-to-position: 2rem;")...)
+	expectDecls(t, ds, "to-[#fff]", with("--tw-gradient-to: #fff;", stopsDecl)...)
+	expectInvalid(t, ds, "bg-linear", "bg-linear-to-x", "bg-linear-to-r/nope", "bg-linear-1.5", "bg-gradient-45", "bg-radial-x", "bg-radial-[at_center]/srgb", "bg-conic-x", "from-10", "from-10%/50", "from-nope", "to-nope")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")
