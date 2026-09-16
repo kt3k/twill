@@ -45,3 +45,12 @@ export {
 } from "./src/utilities.ts";
 export { type DataType, inferDataType } from "./src/data_types.ts";
 export { buildDesignSystem, DesignSystem } from "./src/design_system.ts";
+export { compile, type CompileOptions, type Compiler } from "./src/compile.ts";
+export {
+  compileAstNodes,
+  compileCandidates,
+  type CompileCandidatesOptions,
+  CompileFlags,
+} from "./src/compile_candidates.ts";
+export { optimizeAst } from "./src/optimize.ts";
+export { PROPERTY_ORDER } from "./src/property_order.ts";

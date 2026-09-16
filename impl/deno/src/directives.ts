@@ -9,11 +9,18 @@ import {
   type AstNode,
   type AtRule,
   context,
+  type ParentNode,
   type Rule,
   styleRule,
   walk,
   WalkAction,
 } from "./ast.ts";
+import { type CustomUtility, parseUtilityDefinition } from "./at_utility.ts";
+import {
+  type CustomVariant,
+  isCustomVariantCompat,
+  parseCustomVariant,
+} from "./custom_variant.ts";
 import { TwillError } from "./error.ts";
 import { Features } from "./features.ts";
 import { serialize } from "./serializer.ts";
@@ -50,6 +57,10 @@ export interface CollectedDirectives {
   utilitiesNode: AtRule | null;
   /** The `:root, :host` rule that replaced the first `@theme`, or null. */
   firstThemeRule: Rule | null;
+  /** Custom variants in stylesheet order. */
+  customVariants: CustomVariant[];
+  /** Custom utilities in stylesheet order. */
+  customUtilities: CustomUtility[];
 }
 
 /**
@@ -70,10 +81,39 @@ export function collectDirectives(
     ignoredCandidates: [],
     utilitiesNode: null,
     firstThemeRule: null,
+    customVariants: [],
+    customUtilities: [],
+  };
+
+  const assertTopLevel = (node: AtRule, path: ParentNode[]) => {
+    for (const ancestor of path) {
+      if (ancestor.kind === "rule" || ancestor.kind === "at-rule") {
+        throw new TwillError(
+          `\`${node.name} ${node.params}\` cannot be nested.`,
+        );
+      }
+    }
   };
 
   walk(ast, (node, { context: ctx, path, replaceWith }) => {
     if (node.kind !== "at-rule") return;
+
+    if (
+      node.name === "@custom-variant" ||
+      (node.name === "@variant" && isTopLevel(path) &&
+        isCustomVariantCompat(node))
+    ) {
+      assertTopLevel(node, path);
+      state.customVariants.push(parseCustomVariant(node));
+      replaceWith([]);
+      return;
+    }
+
+    if (node.name === "@utility") {
+      assertTopLevel(node, path);
+      state.customUtilities.push(parseUtilityDefinition(node));
+      return WalkAction.Skip;
+    }
 
     if (node.name === "@media") {
       return handleImportMedia(node, ctx, state, replaceWith);
@@ -151,6 +191,10 @@ export function collectDirectives(
   });
 
   return state;
+}
+
+function isTopLevel(path: ParentNode[]): boolean {
+  return path.every((p) => p.kind === "context");
 }
 
 function parseUtilitiesSource(params: string): string | null {
