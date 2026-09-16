@@ -9,6 +9,7 @@ import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
 import { registerDividerUtilities } from "./dividers.ts";
+import { registerExtraUtilities } from "./extras.ts";
 import { registerFilterUtilities } from "./filters.ts";
 import { registerGradientUtilities } from "./gradients.ts";
 import { registerShadowUtilities } from "./shadows.ts";
@@ -150,6 +151,8 @@ export function registerBuiltinUtilities(
     ["inset-y", ["inset-block"]],
     ["inset-s", ["inset-inline-start"]],
     ["inset-e", ["inset-inline-end"]],
+    ["start", ["inset-inline-start"]],
+    ["end", ["inset-inline-end"]],
     ["top", ["top"]],
     ["right", ["right"]],
     ["bottom", ["bottom"]],
@@ -903,6 +906,12 @@ export function registerBuiltinUtilities(
   registerDividerUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
+  // Typography, layout, tables, scrolling, and interactivity extensions
+  // ---------------------------------------------------------------------
+
+  registerExtraUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
   // Effects, transitions, interactivity
   // ---------------------------------------------------------------------
 
@@ -1107,5 +1116,4 @@ export function registerBuiltinUtilities(
   stat("fill-none", [["fill", "none"]]);
   color("fill", ["--fill", "--color"], single("fill"));
   stat("stroke-none", [["stroke", "none"]]);
-  color("stroke", ["--stroke", "--color"], single("stroke"));
 }

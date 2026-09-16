@@ -418,6 +418,57 @@ func TestUtilitiesDividers(t *testing.T) {
 	expectInvalid(t, ds, "space-x", "space-x-1/2", "divide-x-2/50", "divide-x-nope", "divide-nope", "outline-2/50", "outline-nope", "outline-offset", "outline-offset-x")
 }
 
+func TestUtilitiesExtras(t *testing.T) {
+	ds := designSystemFor(t, "")
+	reg := func(name, initial string) string {
+		out := "@property " + name + " {\n    syntax: \"*\";\n    inherits: false;\n"
+		if initial != "" {
+			out += "    initial-value: " + initial + ";\n"
+		}
+		return out + "  }"
+	}
+	expectDecls(t, ds, "line-clamp-3", "overflow: hidden;", "display: -webkit-box;", "-webkit-box-orient: vertical;", "-webkit-line-clamp: 3;")
+	expectDecls(t, ds, "line-clamp-none", "overflow: visible;", "display: block;", "-webkit-box-orient: horizontal;", "-webkit-line-clamp: unset;")
+	expectDecls(t, ds, "decoration-red-500/50", "text-decoration-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);")
+	expectDecls(t, ds, "decoration-wavy", "text-decoration-style: wavy;")
+	expectDecls(t, ds, "decoration-2", "text-decoration-thickness: 2px;")
+	expectDecls(t, ds, "decoration-[10%]", "text-decoration-thickness: 10%;")
+	expectDecls(t, ds, "hyphens-auto", "-webkit-hyphens: auto;", "hyphens: auto;")
+	expectDecls(t, ds, "tabular-nums", reg("--tw-ordinal", ""), reg("--tw-slashed-zero", ""), reg("--tw-numeric-figure", ""), reg("--tw-numeric-spacing", ""), reg("--tw-numeric-fraction", ""), "--tw-numeric-spacing: tabular-nums;", "font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);")
+	expectDecls(t, ds, "normal-nums", "font-variant-numeric: normal;")
+	expectDecls(t, ds, "align-text-top", "vertical-align: text-top;")
+	expectDecls(t, ds, "font-stretch-50%", "font-stretch: 50%;")
+	expectDecls(t, ds, "font-stretch-condensed", "font-stretch: condensed;")
+	expectDecls(t, ds, "text-shadow-2xs", "text-shadow: 0px 1px 0px var(--tw-text-shadow-color, rgb(0 0 0 / 0.15));")
+	expectDecls(t, ds, "text-shadow-red-500", reg("--tw-text-shadow-color", ""), "--tw-text-shadow-color: var(--color-red-500);")
+	expectDecls(t, ds, "wrap-anywhere", "overflow-wrap: anywhere;")
+	expectDecls(t, ds, "content-none", reg("--tw-content", `""`), "--tw-content: none;", "content: none;")
+	expectDecls(t, ds, "bg-blend-multiply", "background-blend-mode: multiply;")
+	expectDecls(t, ds, "mix-blend-plus-lighter", "mix-blend-mode: plus-lighter;")
+	expectDecls(t, ds, "container", "width: 100%;",
+		"@media (width >= 40rem) {\n    max-width: 40rem;\n  }", "@media (width >= 48rem) {\n    max-width: 48rem;\n  }",
+		"@media (width >= 64rem) {\n    max-width: 64rem;\n  }", "@media (width >= 80rem) {\n    max-width: 80rem;\n  }",
+		"@media (width >= 96rem) {\n    max-width: 96rem;\n  }")
+	expectDecls(t, ds, "break-inside-avoid-column", "break-inside: avoid-column;")
+	expectDecls(t, ds, "box-decoration-clone", "box-decoration-break: clone;")
+	expectDecls(t, ds, "object-[10px_20px]", "object-position: 10px 20px;")
+	expectDecls(t, ds, "-start-4", "inset-inline-start: --spacing(-4);")
+	expectDecls(t, ds, "end-auto", "inset-inline-end: auto;")
+	expectDecls(t, ds, "border-spacing-x-2", reg("--tw-border-spacing-x", "0"), reg("--tw-border-spacing-y", "0"), "--tw-border-spacing-x: --spacing(2);", "border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);")
+	expectDecls(t, ds, "table-fixed", "table-layout: fixed;")
+	expectDecls(t, ds, "-scroll-mt-4", "scroll-margin-top: --spacing(-4);")
+	expectDecls(t, ds, "scroll-px-[3px]", "scroll-padding-inline: 3px;")
+	expectDecls(t, ds, "snap-both", reg("--tw-scroll-snap-strictness", "proximity"), "scroll-snap-type: both var(--tw-scroll-snap-strictness);")
+	expectDecls(t, ds, "snap-mandatory", reg("--tw-scroll-snap-strictness", "proximity"), "--tw-scroll-snap-strictness: mandatory;")
+	expectDecls(t, ds, "touch-pinch-zoom", reg("--tw-pan-x", ""), reg("--tw-pan-y", ""), reg("--tw-pinch-zoom", ""), "--tw-pinch-zoom: pinch-zoom;", "touch-action: var(--tw-pan-x,) var(--tw-pan-y,) var(--tw-pinch-zoom,);")
+	expectDecls(t, ds, "stroke-2", "stroke-width: 2;")
+	expectDecls(t, ds, "stroke-[2px]", "stroke-width: 2px;")
+	expectDecls(t, ds, "stroke-red-500/50", "stroke: color-mix(in oklab, var(--color-red-500) 50%, transparent);")
+	expectDecls(t, ds, "scheme-light-dark", "color-scheme: light dark;")
+	expectDecls(t, ds, "field-sizing-content", "field-sizing: content;")
+	expectInvalid(t, ds, "line-clamp", "line-clamp-1.5", "decoration-2/50", "decoration-nope", "align-nope", "font-stretch-50", "text-shadow-nope", "bg-blend-plus-lighter", "-scroll-p-4", "-border-spacing-2", "stroke-1.5", "stroke-2/50")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")

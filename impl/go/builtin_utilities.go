@@ -94,6 +94,7 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	}{
 		{"inset", []string{"inset"}}, {"inset-x", []string{"inset-inline"}}, {"inset-y", []string{"inset-block"}},
 		{"inset-s", []string{"inset-inline-start"}}, {"inset-e", []string{"inset-inline-end"}},
+		{"start", []string{"inset-inline-start"}}, {"end", []string{"inset-inline-end"}},
 		{"top", []string{"top"}}, {"right", []string{"right"}}, {"bottom", []string{"bottom"}}, {"left", []string{"left"}},
 	} {
 		stat(inset.name+"-auto", decls(inset.properties, "auto")...)
@@ -614,6 +615,9 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	// Space, dividers, and outlines.
 	RegisterDividerUtilities(u, theme)
 
+	// Typography, layout, tables, scrolling, and interactivity extensions.
+	RegisterExtraUtilities(u, theme)
+
 	// Effects, transitions, interactivity.
 	fn("opacity", FunctionalUtilityDescription{ThemeKeys: []string{"--opacity"},
 		HandleBareValue: func(v *CandidateValue) (string, bool) { return v.Value + "%", IsMultipleOfQuarter(v.Value) },
@@ -710,5 +714,4 @@ ne-resize nw-resize se-resize sw-resize ew-resize ns-resize nesw-resize nwse-res
 	stat("fill-none", [2]string{"fill", "none"})
 	color("fill", []string{"--fill", "--color"}, single("fill"))
 	stat("stroke-none", [2]string{"stroke", "none"})
-	color("stroke", []string{"--stroke", "--color"}, single("stroke"))
 }

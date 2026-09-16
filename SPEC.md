@@ -1442,6 +1442,106 @@ it, Section 12.3).
 - `outline-offset-<v>`: `outline-offset` (`--outline-offset`); a bare non-negative integer as
   `<n>px`; negative supported.
 
+Typography extensions:
+
+- `line-clamp-<v>`: a bare non-negative integer, a named value from `--line-clamp`, or an
+  arbitrary value; emits `overflow: hidden`, `display: -webkit-box`, `-webkit-box-orient:
+  vertical`, `-webkit-line-clamp: <v>`. `line-clamp-none`: `overflow: visible`, `display:
+  block`, `-webkit-box-orient: horizontal`, `-webkit-line-clamp: unset`.
+- `decoration-<color>` (`--text-decoration-color`, `--color`): `text-decoration-color`.
+  `decoration-{solid,double,dotted,dashed,wavy}`: `text-decoration-style`. `decoration-<n>` (a
+  bare non-negative integer as `<n>px`), a named value from `--text-decoration-thickness`,
+  `decoration-from-font`, `decoration-auto`: `text-decoration-thickness`. An arbitrary value
+  infers `color` (with the modifier applied), `length`, `percentage`.
+- `hyphens-{none,manual,auto}`: `-webkit-hyphens: <v>` and `hyphens: <v>`.
+- `normal-nums`: `font-variant-numeric: normal`. `ordinal`, `slashed-zero`, `lining-nums`,
+  `oldstyle-nums`, `proportional-nums`, `tabular-nums`, `diagonal-fractions`,
+  `stacked-fractions`: the registrations (no initial value) for `--tw-ordinal`,
+  `--tw-slashed-zero`, `--tw-numeric-figure`, `--tw-numeric-spacing`, `--tw-numeric-fraction`,
+  then the utility's variable set to its name (`--tw-ordinal: ordinal`, `--tw-slashed-zero:
+  slashed-zero`, `--tw-numeric-figure` for the `*-nums` figure forms `lining-nums` and
+  `oldstyle-nums`, `--tw-numeric-spacing` for `proportional-nums` and `tabular-nums`,
+  `--tw-numeric-fraction` for the `*-fractions` forms), then `font-variant-numeric:
+  var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,)
+  var(--tw-numeric-spacing,) var(--tw-numeric-fraction,)`.
+- `align-{baseline,top,middle,bottom,text-top,text-bottom,sub,super}` and `align-[...]`:
+  `vertical-align`.
+- `font-stretch-*`: `font-stretch` with the named values `ultra-condensed`, `extra-condensed`,
+  `condensed`, `semi-condensed`, `normal`, `semi-expanded`, `expanded`, `extra-expanded`,
+  `ultra-expanded`, a bare `<n>%`, a named value from `--font-stretch`, or an arbitrary value.
+- `text-shadow`, `text-shadow-<key>`: the raw value from `--text-shadow` (the namespace itself
+  for the bare form) passed through `replaceShadowColors(v, c => var(--tw-text-shadow-color,
+  c))` with the modifier applied to each `c`; emits `text-shadow: <value>`. A named color
+  (`--text-shadow-color`, `--color`) or an arbitrary value inferring `color` emits the
+  registration for `--tw-text-shadow-color` (no initial value) and `--tw-text-shadow-color:
+  <color>`; any other arbitrary value is a shadow. `text-shadow-none`: `text-shadow: none`.
+- `wrap-break-word`, `wrap-anywhere`, `wrap-normal`: `overflow-wrap: break-word | anywhere |
+  normal`.
+- `list-image-none`: `list-style-image: none`. `list-image-[...]`: `list-style-image`.
+- `content-none`: the `--tw-content` registration, `--tw-content: none`, `content: none`.
+
+Backgrounds and blending extensions:
+
+- `bg-position-[...]`: `background-position`. `bg-size-[...]`: `background-size`.
+- `bg-blend-<mode>`: `background-blend-mode`; `mix-blend-<mode>`: `mix-blend-mode`; the modes
+  are `normal`, `multiply`, `screen`, `overlay`, `darken`, `lighten`, `color-dodge`,
+  `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`, `hue`, `saturation`,
+  `color`, `luminosity`, and for `mix-blend-*` also `plus-darker` and `plus-lighter`.
+
+Layout extensions:
+
+- `container`: `width: 100%` followed by, for every `--breakpoint-*` key (excluding sub-keys)
+  sorted ascending by value with the comparison used for the responsive variants (Section
+  9.5), a nested `@media (width >= <value>)` containing `max-width: <value>`.
+- `break-after-*` and `break-before-*` with `auto`, `avoid`, `all`, `avoid-page`, `page`,
+  `left`, `right`, `column`; `break-inside-*` with `auto`, `avoid`, `avoid-page`,
+  `avoid-column`.
+- `box-decoration-clone`, `box-decoration-slice`: `box-decoration-break`.
+- `object-[...]`: `object-position`.
+- `start-*` and `end-*`: aliases of `inset-s-*` and `inset-e-*` (including `-auto`, `-full`, and
+  the negative forms).
+
+Tables:
+
+- `border-collapse`, `border-separate`: `border-collapse: collapse | separate`.
+- `border-spacing-<v>`: `spacingUtility` (`--border-spacing`, `--spacing`); emits the
+  registrations for `--tw-border-spacing-x`, `--tw-border-spacing-y` (initial `0`),
+  `--tw-border-spacing-x: <v>`, `--tw-border-spacing-y: <v>`, `border-spacing:
+  var(--tw-border-spacing-x) var(--tw-border-spacing-y)`. `border-spacing-x-*` and
+  `border-spacing-y-*` set one variable.
+- `table-auto`, `table-fixed`: `table-layout`. `caption-top`, `caption-bottom`: `caption-side`.
+
+Scrolling and touch:
+
+- `scroll-m`, `scroll-mx`, `scroll-my`, `scroll-ms`, `scroll-me`, `scroll-mt`, `scroll-mr`,
+  `scroll-mb`, `scroll-ml`: `spacingUtility` (`--scroll-margin`, `--spacing`) with negative on
+  `scroll-margin`, `scroll-margin-inline`, `scroll-margin-block`, `scroll-margin-inline-start`,
+  `scroll-margin-inline-end`, `scroll-margin-top`, `scroll-margin-right`,
+  `scroll-margin-bottom`, `scroll-margin-left`. `scroll-p*` likewise (`--scroll-padding`,
+  `--spacing`, no negative) on the corresponding `scroll-padding*` properties.
+- `snap-none`: `scroll-snap-type: none`. `snap-x`, `snap-y`, `snap-both`: the registration for
+  `--tw-scroll-snap-strictness` (initial `proximity`) and `scroll-snap-type: x
+  var(--tw-scroll-snap-strictness)` (`y`, `both`). `snap-mandatory`, `snap-proximity`: the
+  registration and `--tw-scroll-snap-strictness: <v>`. `snap-start`, `snap-end`,
+  `snap-center`, `snap-align-none`: `scroll-snap-align: start | end | center | none`.
+  `snap-normal`, `snap-always`: `scroll-snap-stop`.
+- `touch-auto`, `touch-none`, `touch-manipulation`: `touch-action`. `touch-pan-x`,
+  `touch-pan-left`, `touch-pan-right` (`--tw-pan-x`), `touch-pan-y`, `touch-pan-up`,
+  `touch-pan-down` (`--tw-pan-y`), `touch-pinch-zoom` (`--tw-pinch-zoom`): the registrations (no
+  initial value) for `--tw-pan-x`, `--tw-pan-y`, `--tw-pinch-zoom`, the variable set to the
+  utility's value (`pan-x`, `pan-left`, ..., `pinch-zoom`), and `touch-action: var(--tw-pan-x,)
+  var(--tw-pan-y,) var(--tw-pinch-zoom,)`.
+
+Interactivity and SVG extensions:
+
+- `stroke-<v>`: a bare non-negative integer, a named value from `--stroke-width`, or an
+  arbitrary value inferring `length`, `number`, or `percentage` gives `stroke-width: <v>`;
+  other values are colors as described above.
+- `scheme-{normal,dark,light,light-dark,only-dark,only-light}`: `color-scheme` with `light-dark`
+  as `light dark`, `only-dark` as `only dark`, `only-light` as `only light`.
+- `field-sizing-content`, `field-sizing-fixed`: `field-sizing`.
+- `forced-color-adjust-auto`, `forced-color-adjust-none`: `forced-color-adjust`.
+
 Implementations MAY provide additional utilities (masks and others) using the same helpers and
 the same variable conventions.
 
