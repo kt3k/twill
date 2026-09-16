@@ -246,12 +246,14 @@ func walk(nodes *[]Node, visit Visitor, parent Node, ctx ContextMap, path []Node
 		}
 		u := &WalkUtils{Parent: parent, Context: nodeCtx, Path: path}
 		action := visit(node, u)
+		if u.replaced {
+			rest := append([]Node{}, (*nodes)[i+1:]...)
+			*nodes = append(append((*nodes)[:i], u.replacement...), rest...)
+		}
 		if action == Stop {
 			return Stop
 		}
 		if u.replaced {
-			rest := append([]Node{}, (*nodes)[i+1:]...)
-			*nodes = append(append((*nodes)[:i], u.replacement...), rest...)
 			i--
 			continue
 		}
