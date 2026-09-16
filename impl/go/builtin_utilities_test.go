@@ -256,6 +256,52 @@ func TestReplaceShadowColors(t *testing.T) {
 	assertEqual(t, ReplaceShadowColors("0px  1px\n  0px #000", wrap, false), "0px 1px 0px <#000>")
 }
 
+func registrations(names []string, initial string) []string {
+	var out []string
+	for _, n := range names {
+		reg := "@property " + n + " {\n    syntax: \"*\";\n    inherits: false;\n"
+		if initial != "" {
+			reg += "    initial-value: " + initial + ";\n"
+		}
+		out = append(out, reg+"  }")
+	}
+	return out
+}
+
+func TestUtilitiesTransforms(t *testing.T) {
+	ds := designSystemFor(t, "")
+	transformRegs := registrations([]string{"--tw-rotate-x", "--tw-rotate-y", "--tw-rotate-z", "--tw-skew-x", "--tw-skew-y"}, "")
+	translateRegs := registrations([]string{"--tw-translate-x", "--tw-translate-y", "--tw-translate-z"}, "0")
+	scaleRegs := registrations([]string{"--tw-scale-x", "--tw-scale-y", "--tw-scale-z"}, "1")
+	transformDecl := "transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);"
+	with := func(regs []string, decls ...string) []string { return append(append([]string{}, regs...), decls...) }
+
+	expectDecls(t, ds, "transform-none", "transform: none;")
+	expectDecls(t, ds, "transform-gpu", with(transformRegs, "transform: translateZ(0) var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);")...)
+	expectDecls(t, ds, "transform-[matrix(1,0,0,1,0,0)]", "transform: matrix(1,0,0,1,0,0);")
+	expectDecls(t, ds, "transform-3d", "transform-style: preserve-3d;")
+	expectDecls(t, ds, "backface-hidden", "backface-visibility: hidden;")
+	expectDecls(t, ds, "perspective-near", "perspective: var(--perspective-near);")
+	expectDecls(t, ds, "perspective-origin-top-left", "perspective-origin: top left;")
+	expectDecls(t, ds, "origin-[10px_20px]", "transform-origin: 10px 20px;")
+	expectDecls(t, ds, "translate-4", with(translateRegs, "--tw-translate-x: --spacing(4);", "--tw-translate-y: --spacing(4);", "translate: var(--tw-translate-x) var(--tw-translate-y);")...)
+	expectDecls(t, ds, "-translate-x-1/2", with(translateRegs, "--tw-translate-x: calc(calc(1 / 2 * 100%) * -1);", "translate: var(--tw-translate-x) var(--tw-translate-y);")...)
+	expectDecls(t, ds, "-translate-y-full", with(translateRegs, "--tw-translate-y: -100%;", "translate: var(--tw-translate-x) var(--tw-translate-y);")...)
+	expectDecls(t, ds, "translate-z-px", with(translateRegs, "--tw-translate-z: 1px;", "translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);")...)
+	expectDecls(t, ds, "translate-none", "translate: none;")
+	expectDecls(t, ds, "scale-50", with(scaleRegs, "--tw-scale-x: 50%;", "--tw-scale-y: 50%;", "--tw-scale-z: 50%;", "scale: var(--tw-scale-x) var(--tw-scale-y);")...)
+	expectDecls(t, ds, "-scale-x-75", with(scaleRegs, "--tw-scale-x: calc(75% * -1);", "scale: var(--tw-scale-x) var(--tw-scale-y);")...)
+	expectDecls(t, ds, "scale-z-150", with(scaleRegs, "--tw-scale-z: 150%;", "scale: var(--tw-scale-x) var(--tw-scale-y) var(--tw-scale-z);")...)
+	expectDecls(t, ds, "scale-[1.5]", "scale: 1.5;")
+	expectDecls(t, ds, "rotate-45", "rotate: 45deg;")
+	expectDecls(t, ds, "-rotate-45", "rotate: calc(45deg * -1);")
+	expectDecls(t, ds, "rotate-[30deg]", "rotate: 30deg;")
+	expectDecls(t, ds, "rotate-x-30", with(transformRegs, "--tw-rotate-x: rotateX(30deg);", transformDecl)...)
+	expectDecls(t, ds, "-skew-6", with(transformRegs, "--tw-skew-x: skewX(calc(6deg * -1));", "--tw-skew-y: skewY(calc(6deg * -1));", transformDecl)...)
+	expectDecls(t, ds, "skew-y-[10deg]", with(transformRegs, "--tw-skew-y: skewY(10deg);", transformDecl)...)
+	expectInvalid(t, ds, "transform", "origin-nope", "translate-z-1/2", "scale-1.5", "scale-50/2", "-scale-[1.5]", "rotate-1.5", "rotate-45/2", "skew-x", "perspective-500")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")

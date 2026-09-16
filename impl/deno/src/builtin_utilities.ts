@@ -9,6 +9,7 @@ import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
 import { registerShadowUtilities } from "./shadows.ts";
+import { registerTransformUtilities } from "./transforms.ts";
 import { isMultipleOfQuarter, isPositiveInteger } from "./utils.ts";
 import {
   asColor,
@@ -873,6 +874,12 @@ export function registerBuiltinUtilities(
   // ---------------------------------------------------------------------
 
   registerShadowUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
+  // Transforms
+  // ---------------------------------------------------------------------
+
+  registerTransformUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity

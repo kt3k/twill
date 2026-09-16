@@ -540,6 +540,117 @@ Deno.test("utilities: shadows and rings", async () => {
   );
 });
 
+const TRANSFORM_REGISTRATIONS = [
+  "--tw-rotate-x",
+  "--tw-rotate-y",
+  "--tw-rotate-z",
+  "--tw-skew-x",
+  "--tw-skew-y",
+].map((name) =>
+  `@property ${name} {\n    syntax: "*";\n    inherits: false;\n  }`
+);
+const TRANSLATE_REGISTRATIONS = ["x", "y", "z"].map((axis) =>
+  `@property --tw-translate-${axis} {\n    syntax: "*";\n    inherits: false;\n    initial-value: 0;\n  }`
+);
+const SCALE_REGISTRATIONS = ["x", "y", "z"].map((axis) =>
+  `@property --tw-scale-${axis} {\n    syntax: "*";\n    inherits: false;\n    initial-value: 1;\n  }`
+);
+const TRANSFORM_DECL =
+  "transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);";
+
+Deno.test("utilities: transforms", async () => {
+  const ds = await setup();
+  expectDecls(ds, "transform-none", ["transform: none;"]);
+  expectDecls(ds, "transform-gpu", [
+    ...TRANSFORM_REGISTRATIONS,
+    "transform: translateZ(0) var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);",
+  ]);
+  expectDecls(ds, "transform-[matrix(1,0,0,1,0,0)]", [
+    "transform: matrix(1,0,0,1,0,0);",
+  ]);
+  expectDecls(ds, "transform-3d", ["transform-style: preserve-3d;"]);
+  expectDecls(ds, "backface-hidden", ["backface-visibility: hidden;"]);
+  expectDecls(ds, "perspective-near", [
+    "perspective: var(--perspective-near);",
+  ]);
+  expectDecls(ds, "perspective-origin-top-left", [
+    "perspective-origin: top left;",
+  ]);
+  expectDecls(ds, "origin-[10px_20px]", ["transform-origin: 10px 20px;"]);
+  expectDecls(ds, "translate-4", [
+    ...TRANSLATE_REGISTRATIONS,
+    "--tw-translate-x: --spacing(4);",
+    "--tw-translate-y: --spacing(4);",
+    "translate: var(--tw-translate-x) var(--tw-translate-y);",
+  ]);
+  expectDecls(ds, "-translate-x-1/2", [
+    ...TRANSLATE_REGISTRATIONS,
+    "--tw-translate-x: calc(calc(1 / 2 * 100%) * -1);",
+    "translate: var(--tw-translate-x) var(--tw-translate-y);",
+  ]);
+  expectDecls(ds, "-translate-y-full", [
+    ...TRANSLATE_REGISTRATIONS,
+    "--tw-translate-y: -100%;",
+    "translate: var(--tw-translate-x) var(--tw-translate-y);",
+  ]);
+  expectDecls(ds, "translate-z-px", [
+    ...TRANSLATE_REGISTRATIONS,
+    "--tw-translate-z: 1px;",
+    "translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);",
+  ]);
+  expectDecls(ds, "translate-none", ["translate: none;"]);
+  expectDecls(ds, "scale-50", [
+    ...SCALE_REGISTRATIONS,
+    "--tw-scale-x: 50%;",
+    "--tw-scale-y: 50%;",
+    "--tw-scale-z: 50%;",
+    "scale: var(--tw-scale-x) var(--tw-scale-y);",
+  ]);
+  expectDecls(ds, "-scale-x-75", [
+    ...SCALE_REGISTRATIONS,
+    "--tw-scale-x: calc(75% * -1);",
+    "scale: var(--tw-scale-x) var(--tw-scale-y);",
+  ]);
+  expectDecls(ds, "scale-z-150", [
+    ...SCALE_REGISTRATIONS,
+    "--tw-scale-z: 150%;",
+    "scale: var(--tw-scale-x) var(--tw-scale-y) var(--tw-scale-z);",
+  ]);
+  expectDecls(ds, "scale-[1.5]", ["scale: 1.5;"]);
+  expectDecls(ds, "rotate-45", ["rotate: 45deg;"]);
+  expectDecls(ds, "-rotate-45", ["rotate: calc(45deg * -1);"]);
+  expectDecls(ds, "rotate-[30deg]", ["rotate: 30deg;"]);
+  expectDecls(ds, "rotate-x-30", [
+    ...TRANSFORM_REGISTRATIONS,
+    "--tw-rotate-x: rotateX(30deg);",
+    TRANSFORM_DECL,
+  ]);
+  expectDecls(ds, "-skew-6", [
+    ...TRANSFORM_REGISTRATIONS,
+    "--tw-skew-x: skewX(calc(6deg * -1));",
+    "--tw-skew-y: skewY(calc(6deg * -1));",
+    TRANSFORM_DECL,
+  ]);
+  expectDecls(ds, "skew-y-[10deg]", [
+    ...TRANSFORM_REGISTRATIONS,
+    "--tw-skew-y: skewY(10deg);",
+    TRANSFORM_DECL,
+  ]);
+  expectInvalid(
+    ds,
+    "transform",
+    "origin-nope",
+    "translate-z-1/2",
+    "scale-1.5",
+    "scale-50/2",
+    "-scale-[1.5]",
+    "rotate-1.5",
+    "rotate-45/2",
+    "skew-x",
+    "perspective-500",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);

@@ -602,6 +602,9 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	// Shadows and rings.
 	RegisterShadowUtilities(u, theme)
 
+	// Transforms.
+	RegisterTransformUtilities(u, theme)
+
 	// Effects, transitions, interactivity.
 	fn("opacity", FunctionalUtilityDescription{ThemeKeys: []string{"--opacity"},
 		HandleBareValue: func(v *CandidateValue) (string, bool) { return v.Value + "%", IsMultipleOfQuarter(v.Value) },
