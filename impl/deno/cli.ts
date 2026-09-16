@@ -126,7 +126,12 @@ interface Io {
 
 const defaultIo: Io = {
   async stdout(text) {
-    await Deno.stdout.write(new TextEncoder().encode(text));
+    // `Deno.stdout.write` may write only part of the buffer.
+    const bytes = new TextEncoder().encode(text);
+    let written = 0;
+    while (written < bytes.length) {
+      written += await Deno.stdout.write(bytes.subarray(written));
+    }
   },
   stderr(text) {
     Deno.stderr.writeSync(new TextEncoder().encode(text));

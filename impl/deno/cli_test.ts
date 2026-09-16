@@ -180,6 +180,46 @@ Deno.test("cli: single build to stdout and to a file", async () => {
     });
     assertEquals(minified.code, 0, minified.stderr);
     assertStringIncludes(minified.stdout, ".flex{display:flex;}");
+
+    // Large outputs reach stdout in full (`Deno.stdout.write` may be partial).
+    await Deno.writeTextFile(
+      join(root, "input.css"),
+      `@import "twill";\n`,
+    );
+    const classes = Array.from({ length: 200 }, (_, i) => `p-${i} m-${i}`);
+    await Deno.writeTextFile(
+      join(root, "many.html"),
+      `<div class="${classes.join(" ")}">`,
+    );
+    // Outputs live outside `root` so that they are not scanned as sources.
+    const outside = await Deno.makeTempDir({ prefix: "twill-cli-out-" });
+    const redirected = join(outside, "redirected.css");
+    const writtenPath = join(outside, "written.css");
+    const shell = await new Deno.Command("sh", {
+      args: [
+        "-c",
+        `"${Deno.execPath()}" run -A "${CLI}" -i input.css --minify --silent > "${redirected}"`,
+      ],
+      cwd: root,
+      stdin: "null",
+      stdout: "null",
+      stderr: "piped",
+    }).output();
+    assertEquals(shell.code, 0, new TextDecoder().decode(shell.stderr));
+    const largeFile = await runCli([
+      "-i",
+      "input.css",
+      "-o",
+      writtenPath,
+      "--minify",
+      "--silent",
+    ], { cwd: root });
+    assertEquals(largeFile.code, 0, largeFile.stderr);
+    assertEquals(
+      await Deno.readTextFile(redirected),
+      await Deno.readTextFile(writtenPath),
+    );
+    await Deno.remove(outside, { recursive: true });
   } finally {
     await Deno.remove(root, { recursive: true });
   }
