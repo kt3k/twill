@@ -6,7 +6,8 @@
     ".": "./mod.ts"
   },
   "tasks": {
-    "test": "deno test",
+    "test": "deno test --allow-read=.",
+    "gen": "deno run --allow-read=. --allow-write=src/bundled_css.ts scripts/gen_bundled_css.ts",
     "check": "deno fmt --check && deno lint && deno check mod.ts",
     "ok": "deno task check && deno task test"
   },
@@ -17,10 +18,21 @@
     "@std/cli": "jsr:@std/cli@^1"
   },
   "fmt": {
-    "exclude": ["src/bundled_css.ts"]
+    "exclude": [
+      "src/bundled_css.ts",
+      "css/"
+    ]
   },
   "publish": {
-    "include": ["mod.ts", "cli.ts", "src/**/*.ts", "README.md", "LICENSE"],
-    "exclude": ["src/**/*_test.ts"]
+    "include": [
+      "mod.ts",
+      "cli.ts",
+      "src/**/*.ts",
+      "README.md",
+      "LICENSE"
+    ],
+    "exclude": [
+      "src/**/*_test.ts"
+    ]
   }
 }
