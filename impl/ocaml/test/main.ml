@@ -4,4 +4,6 @@ let () =
   Test_theme.run ();
   Test_directives.run ();
   Test_candidate.run ();
+  Test_builtin_variants.run ();
+  Test_builtin_utilities.run ();
   Harness.finish ()
