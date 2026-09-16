@@ -12,6 +12,7 @@ import { registerDividerUtilities } from "./dividers.ts";
 import { registerExtraUtilities } from "./extras.ts";
 import { registerFilterUtilities } from "./filters.ts";
 import { registerGradientUtilities } from "./gradients.ts";
+import { registerMaskUtilities } from "./masks.ts";
 import { registerShadowUtilities } from "./shadows.ts";
 import { registerTransformUtilities } from "./transforms.ts";
 import { isMultipleOfQuarter, isPositiveInteger } from "./utils.ts";
@@ -910,6 +911,12 @@ export function registerBuiltinUtilities(
   // ---------------------------------------------------------------------
 
   registerExtraUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
+  // Masks
+  // ---------------------------------------------------------------------
+
+  registerMaskUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity

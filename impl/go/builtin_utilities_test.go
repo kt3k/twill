@@ -469,6 +469,63 @@ func TestUtilitiesExtras(t *testing.T) {
 	expectInvalid(t, ds, "line-clamp", "line-clamp-1.5", "decoration-2/50", "decoration-nope", "align-nope", "font-stretch-50", "text-shadow-nope", "bg-blend-plus-lighter", "-scroll-p-4", "-border-spacing-2", "stroke-1.5", "stroke-2/50")
 }
 
+func TestUtilitiesMasks(t *testing.T) {
+	ds := designSystemFor(t, "")
+	reg := func(name, initial string) string {
+		return "@property " + name + " {\n    syntax: \"*\";\n    inherits: false;\n    initial-value: " + initial + ";\n  }"
+	}
+	stops := func(name string) []string {
+		return []string{reg("--tw-mask-"+name+"-from-color", "black"), reg("--tw-mask-"+name+"-from-position", "0%"),
+			reg("--tw-mask-"+name+"-to-color", "transparent"), reg("--tw-mask-"+name+"-to-position", "100%")}
+	}
+	white := "linear-gradient(#fff, #fff)"
+	var regs []string
+	for _, edge := range []string{"top", "right", "bottom", "left"} {
+		regs = append(append(regs, reg("--tw-mask-"+edge, white)), stops(edge)...)
+	}
+	regs = append(append(regs, reg("--tw-mask-linear", white), reg("--tw-mask-linear-position", "0deg")), stops("linear")...)
+	regs = append(append(regs, reg("--tw-mask-radial", white), reg("--tw-mask-radial-shape", "ellipse"), reg("--tw-mask-radial-size", "farthest-corner"), reg("--tw-mask-radial-position", "center")), stops("radial")...)
+	regs = append(append(regs, reg("--tw-mask-conic", white), reg("--tw-mask-conic-position", "0deg")), stops("conic")...)
+	assertEqual(t, len(regs), 40)
+	composed := func(decls ...string) []string {
+		out := append(append([]string{}, regs...), "mask-image: var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic);", "mask-composite: intersect;")
+		return append(out, decls...)
+	}
+	edgeList := "--tw-mask-linear: var(--tw-mask-left), var(--tw-mask-right), var(--tw-mask-bottom), var(--tw-mask-top);"
+	edge := func(e string) string {
+		return "--tw-mask-" + e + ": linear-gradient(to " + e + ", var(--tw-mask-" + e + "-from-color) var(--tw-mask-" + e + "-from-position), var(--tw-mask-" + e + "-to-color) var(--tw-mask-" + e + "-to-position));"
+	}
+	linear := "--tw-mask-linear: linear-gradient(var(--tw-mask-linear-position), var(--tw-mask-linear-from-color) var(--tw-mask-linear-from-position), var(--tw-mask-linear-to-color) var(--tw-mask-linear-to-position));"
+	radial := "--tw-mask-radial: radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), var(--tw-mask-radial-from-color) var(--tw-mask-radial-from-position), var(--tw-mask-radial-to-color) var(--tw-mask-radial-to-position));"
+	conic := "--tw-mask-conic: conic-gradient(from var(--tw-mask-conic-position), var(--tw-mask-conic-from-color) var(--tw-mask-conic-from-position), var(--tw-mask-conic-to-color) var(--tw-mask-conic-to-position));"
+
+	expectDecls(t, ds, "mask-none", "mask-image: none;")
+	expectDecls(t, ds, "mask-[url(x.svg)]", "mask-image: url(x.svg);")
+	expectDecls(t, ds, "mask-intersect", "mask-composite: intersect;")
+	expectDecls(t, ds, "mask-match", "mask-mode: match-source;")
+	expectDecls(t, ds, "mask-type-luminance", "mask-type: luminance;")
+	expectDecls(t, ds, "mask-cover", "mask-size: cover;")
+	expectDecls(t, ds, "mask-clip-border", "mask-clip: border-box;")
+	expectDecls(t, ds, "mask-no-clip", "mask-clip: no-clip;")
+	expectDecls(t, ds, "mask-origin-view", "mask-origin: view-box;")
+	expectDecls(t, ds, "mask-bottom-right", "mask-position: bottom right;")
+	expectDecls(t, ds, "mask-repeat-space", "mask-repeat: space;")
+	expectDecls(t, ds, "mask-t-from-50%", composed(edgeList, edge("top"), "--tw-mask-top-from-position: 50%;")...)
+	expectDecls(t, ds, "mask-b-to-4", composed(edgeList, edge("bottom"), "--tw-mask-bottom-to-position: --spacing(4);")...)
+	expectDecls(t, ds, "mask-x-from-red-500/50", composed(edgeList, edge("left"), edge("right"),
+		"--tw-mask-left-from-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+		"--tw-mask-right-from-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);")...)
+	expectDecls(t, ds, "-mask-linear-45", composed(linear, "--tw-mask-linear-position: calc(45deg * -1);")...)
+	expectDecls(t, ds, "mask-linear-from-[3rem]", composed(linear, "--tw-mask-linear-from-position: 3rem;")...)
+	expectDecls(t, ds, "mask-radial-[100px_50px]", composed(radial, "--tw-mask-radial-size: 100px 50px;")...)
+	expectDecls(t, ds, "mask-radial-to-transparent", composed(radial, "--tw-mask-radial-to-color: transparent;")...)
+	expectDecls(t, ds, "mask-circle", "--tw-mask-radial-shape: circle;")
+	expectDecls(t, ds, "mask-radial-at-top-left", "--tw-mask-radial-position: top left;")
+	expectDecls(t, ds, "mask-conic-[0.5turn]", composed(conic, "--tw-mask-conic-position: 0.5turn;")...)
+	expectDecls(t, ds, "mask-conic-from-10%", composed(conic, "--tw-mask-conic-from-position: 10%;")...)
+	expectInvalid(t, ds, "mask-t-from", "mask-t-from-nope", "mask-t-from-50%/50", "mask-l-from-1/2", "mask-linear-[30px]", "mask-linear-x", "mask-radial-x", "mask-conic-x")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")

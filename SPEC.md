@@ -1542,8 +1542,74 @@ Interactivity and SVG extensions:
 - `field-sizing-content`, `field-sizing-fixed`: `field-sizing`.
 - `forced-color-adjust-auto`, `forced-color-adjust-none`: `forced-color-adjust`.
 
-Implementations MAY provide additional utilities (masks and others) using the same helpers and
-the same variable conventions.
+Masks:
+
+- `mask-none`: `mask-image: none`. `mask-[...]`: `mask-image: <value>`.
+- `mask-add`, `mask-subtract`, `mask-intersect`, `mask-exclude`: `mask-composite`.
+  `mask-alpha`, `mask-luminance`, `mask-match`: `mask-mode: alpha | luminance | match-source`.
+  `mask-type-alpha`, `mask-type-luminance`: `mask-type`.
+- `mask-auto`, `mask-cover`, `mask-contain`, `mask-size-[...]`: `mask-size`.
+  `mask-clip-{border,padding,content,fill,stroke,view}`: `mask-clip: <v>-box`; `mask-no-clip`:
+  `mask-clip: no-clip`. `mask-origin-{border,padding,content,fill,stroke,view}`: `mask-origin:
+  <v>-box`.
+- `mask-{top,top-left,top-right,left,center,right,bottom,bottom-left,bottom-right}`:
+  `mask-position` (`top left`, `top right`, `bottom left`, `bottom right` for the corners);
+  `mask-position-[...]`. `mask-repeat`, `mask-no-repeat`, `mask-repeat-x`, `mask-repeat-y`,
+  `mask-repeat-space`, `mask-repeat-round`: `mask-repeat: repeat | no-repeat | repeat-x |
+  repeat-y | space | round`.
+
+Gradient masks compose through variables. Let `MASK_REGISTRATIONS` be the registrations
+(Section 10.4, no explicit syntax), in this order: for each edge `e` of `top`, `right`,
+`bottom`, `left`: `--tw-mask-<e>` (initial `linear-gradient(#fff, #fff)`),
+`--tw-mask-<e>-from-color` (`black`), `--tw-mask-<e>-from-position` (`0%`),
+`--tw-mask-<e>-to-color` (`transparent`), `--tw-mask-<e>-to-position` (`100%`); then
+`--tw-mask-linear` (`linear-gradient(#fff, #fff)`), `--tw-mask-linear-position` (`0deg`), and
+the four linear from/to registrations as for an edge; then `--tw-mask-radial`
+(`linear-gradient(#fff, #fff)`), `--tw-mask-radial-shape` (`ellipse`), `--tw-mask-radial-size`
+(`farthest-corner`), `--tw-mask-radial-position` (`center`), and the four radial from/to
+registrations; then `--tw-mask-conic` (`linear-gradient(#fff, #fff)`),
+`--tw-mask-conic-position` (`0deg`), and the four conic from/to registrations. Let
+`MASK_IMAGE` be the declarations `mask-image: var(--tw-mask-linear), var(--tw-mask-radial),
+var(--tw-mask-conic)` and `mask-composite: intersect`. A mask stop value is: a named color
+(`--color`, with the color modifier) or an arbitrary value inferring `color`, giving a color; or
+a position, which is `<n>%`, a bare non-negative integer `<n>` as `--spacing(<n>)` (requires
+`--spacing` in the theme), or an arbitrary value inferring `length` or `percentage` (a modifier
+invalidates a position).
+
+- `mask-<edge>-from-<stop>`, `mask-<edge>-to-<stop>` for `<edge>` in `t`, `r`, `b`, `l` (one
+  edge), `x` (`left` and `right`), `y` (`top` and `bottom`): `MASK_REGISTRATIONS`, `MASK_IMAGE`,
+  `--tw-mask-linear: var(--tw-mask-left), var(--tw-mask-right), var(--tw-mask-bottom),
+  var(--tw-mask-top)`, then for each edge `e` of the set `--tw-mask-<e>: linear-gradient(to
+  <e>, var(--tw-mask-<e>-from-color) var(--tw-mask-<e>-from-position),
+  var(--tw-mask-<e>-to-color) var(--tw-mask-<e>-to-position))` followed by
+  `--tw-mask-<e>-from-position: <v>` (or `-from-color`, `-to-position`, `-to-color` as the
+  utility and stop kind require).
+- `mask-linear-<n>` (a bare non-negative integer as `<n>deg`, negative supported, or an
+  arbitrary value inferring `angle`), `mask-linear-from-<stop>`, `mask-linear-to-<stop>`:
+  `MASK_REGISTRATIONS`, `MASK_IMAGE`, `--tw-mask-linear:
+  linear-gradient(var(--tw-mask-linear-position), var(--tw-mask-linear-from-color)
+  var(--tw-mask-linear-from-position), var(--tw-mask-linear-to-color)
+  var(--tw-mask-linear-to-position))`, then `--tw-mask-linear-position: <angle>` or the stop
+  declaration.
+- `mask-radial-[...]` (`--tw-mask-radial-size: <value>`), `mask-radial-from-<stop>`,
+  `mask-radial-to-<stop>`: `MASK_REGISTRATIONS`, `MASK_IMAGE`, `--tw-mask-radial:
+  radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at
+  var(--tw-mask-radial-position), var(--tw-mask-radial-from-color)
+  var(--tw-mask-radial-from-position), var(--tw-mask-radial-to-color)
+  var(--tw-mask-radial-to-position))`, then the size or stop declaration. `mask-circle`,
+  `mask-ellipse`: `--tw-mask-radial-shape`. `mask-radial-{closest-side,farthest-side,
+  closest-corner,farthest-corner}`: `--tw-mask-radial-size`. `mask-radial-at-{top,top-left,
+  top-right,left,center,right,bottom,bottom-left,bottom-right}` and `mask-radial-at-[...]`:
+  `--tw-mask-radial-position` (corners as `top left` etc.).
+- `mask-conic-<n>` (as `mask-linear-<n>`), `mask-conic-from-<stop>`, `mask-conic-to-<stop>`:
+  `MASK_REGISTRATIONS`, `MASK_IMAGE`, `--tw-mask-conic: conic-gradient(from
+  var(--tw-mask-conic-position), var(--tw-mask-conic-from-color)
+  var(--tw-mask-conic-from-position), var(--tw-mask-conic-to-color)
+  var(--tw-mask-conic-to-position))`, then `--tw-mask-conic-position: <angle>` or the stop
+  declaration.
+
+Implementations MAY provide additional utilities using the same helpers and the same variable
+conventions.
 
 ## 11. Compilation and Ordering
 

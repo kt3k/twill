@@ -1085,6 +1085,135 @@ Deno.test("utilities: typography, layout, table, scrolling extensions", async ()
   );
 });
 
+Deno.test("utilities: masks", async () => {
+  const ds = await setup();
+  const registration = (name: string, initial: string) =>
+    `@property ${name} {\n    syntax: "*";\n    inherits: false;\n    initial-value: ${initial};\n  }`;
+  const stops = (name: string) => [
+    registration(`--tw-mask-${name}-from-color`, "black"),
+    registration(`--tw-mask-${name}-from-position`, "0%"),
+    registration(`--tw-mask-${name}-to-color`, "transparent"),
+    registration(`--tw-mask-${name}-to-position`, "100%"),
+  ];
+  const white = "linear-gradient(#fff, #fff)";
+  const MASK_REGISTRATIONS = [
+    ...["top", "right", "bottom", "left"].flatMap((edge) => [
+      registration(`--tw-mask-${edge}`, white),
+      ...stops(edge),
+    ]),
+    registration("--tw-mask-linear", white),
+    registration("--tw-mask-linear-position", "0deg"),
+    ...stops("linear"),
+    registration("--tw-mask-radial", white),
+    registration("--tw-mask-radial-shape", "ellipse"),
+    registration("--tw-mask-radial-size", "farthest-corner"),
+    registration("--tw-mask-radial-position", "center"),
+    ...stops("radial"),
+    registration("--tw-mask-conic", white),
+    registration("--tw-mask-conic-position", "0deg"),
+    ...stops("conic"),
+  ];
+  assertEquals(MASK_REGISTRATIONS.length, 40);
+  const composed = (...declarations: string[]) => [
+    ...MASK_REGISTRATIONS,
+    "mask-image: var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic);",
+    "mask-composite: intersect;",
+    ...declarations,
+  ];
+  const edgeList =
+    "--tw-mask-linear: var(--tw-mask-left), var(--tw-mask-right), var(--tw-mask-bottom), var(--tw-mask-top);";
+  const edge = (e: string) =>
+    `--tw-mask-${e}: linear-gradient(to ${e}, var(--tw-mask-${e}-from-color) var(--tw-mask-${e}-from-position), var(--tw-mask-${e}-to-color) var(--tw-mask-${e}-to-position));`;
+  const linear =
+    "--tw-mask-linear: linear-gradient(var(--tw-mask-linear-position), var(--tw-mask-linear-from-color) var(--tw-mask-linear-from-position), var(--tw-mask-linear-to-color) var(--tw-mask-linear-to-position));";
+  const radial =
+    "--tw-mask-radial: radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), var(--tw-mask-radial-from-color) var(--tw-mask-radial-from-position), var(--tw-mask-radial-to-color) var(--tw-mask-radial-to-position));";
+  const conic =
+    "--tw-mask-conic: conic-gradient(from var(--tw-mask-conic-position), var(--tw-mask-conic-from-color) var(--tw-mask-conic-from-position), var(--tw-mask-conic-to-color) var(--tw-mask-conic-to-position));";
+
+  expectDecls(ds, "mask-none", ["mask-image: none;"]);
+  expectDecls(ds, "mask-[url(x.svg)]", ["mask-image: url(x.svg);"]);
+  expectDecls(ds, "mask-intersect", ["mask-composite: intersect;"]);
+  expectDecls(ds, "mask-match", ["mask-mode: match-source;"]);
+  expectDecls(ds, "mask-type-luminance", ["mask-type: luminance;"]);
+  expectDecls(ds, "mask-cover", ["mask-size: cover;"]);
+  expectDecls(ds, "mask-clip-border", ["mask-clip: border-box;"]);
+  expectDecls(ds, "mask-no-clip", ["mask-clip: no-clip;"]);
+  expectDecls(ds, "mask-origin-view", ["mask-origin: view-box;"]);
+  expectDecls(ds, "mask-bottom-right", ["mask-position: bottom right;"]);
+  expectDecls(ds, "mask-repeat-space", ["mask-repeat: space;"]);
+  expectDecls(
+    ds,
+    "mask-t-from-50%",
+    composed(edgeList, edge("top"), "--tw-mask-top-from-position: 50%;"),
+  );
+  expectDecls(
+    ds,
+    "mask-b-to-4",
+    composed(
+      edgeList,
+      edge("bottom"),
+      "--tw-mask-bottom-to-position: --spacing(4);",
+    ),
+  );
+  expectDecls(
+    ds,
+    "mask-x-from-red-500/50",
+    composed(
+      edgeList,
+      edge("left"),
+      edge("right"),
+      "--tw-mask-left-from-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+      "--tw-mask-right-from-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+    ),
+  );
+  expectDecls(
+    ds,
+    "-mask-linear-45",
+    composed(linear, "--tw-mask-linear-position: calc(45deg * -1);"),
+  );
+  expectDecls(
+    ds,
+    "mask-linear-from-[3rem]",
+    composed(linear, "--tw-mask-linear-from-position: 3rem;"),
+  );
+  expectDecls(
+    ds,
+    "mask-radial-[100px_50px]",
+    composed(radial, "--tw-mask-radial-size: 100px 50px;"),
+  );
+  expectDecls(
+    ds,
+    "mask-radial-to-transparent",
+    composed(radial, "--tw-mask-radial-to-color: transparent;"),
+  );
+  expectDecls(ds, "mask-circle", ["--tw-mask-radial-shape: circle;"]);
+  expectDecls(ds, "mask-radial-at-top-left", [
+    "--tw-mask-radial-position: top left;",
+  ]);
+  expectDecls(
+    ds,
+    "mask-conic-[0.5turn]",
+    composed(conic, "--tw-mask-conic-position: 0.5turn;"),
+  );
+  expectDecls(
+    ds,
+    "mask-conic-from-10%",
+    composed(conic, "--tw-mask-conic-from-position: 10%;"),
+  );
+  expectInvalid(
+    ds,
+    "mask-t-from",
+    "mask-t-from-nope",
+    "mask-t-from-50%/50",
+    "mask-l-from-1/2",
+    "mask-linear-[30px]",
+    "mask-linear-x",
+    "mask-radial-x",
+    "mask-conic-x",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);
