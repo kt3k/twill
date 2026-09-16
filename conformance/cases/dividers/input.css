@@ -1,0 +1,8 @@
+@import "twill/theme.css";
+@theme {
+  --divide-width-thick: 3px;
+  --divide-color-line: #ccc;
+  --outline-width-fat: 4px;
+  --outline-offset-far: 8px;
+}
+@twill utilities;

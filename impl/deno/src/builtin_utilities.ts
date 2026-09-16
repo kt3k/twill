@@ -8,6 +8,7 @@ import { type AstNode, decl } from "./ast.ts";
 import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
+import { registerDividerUtilities } from "./dividers.ts";
 import { registerFilterUtilities } from "./filters.ts";
 import { registerGradientUtilities } from "./gradients.ts";
 import { registerShadowUtilities } from "./shadows.ts";
@@ -894,6 +895,12 @@ export function registerBuiltinUtilities(
   // ---------------------------------------------------------------------
 
   registerGradientUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
+  // Space, dividers, and outlines
+  // ---------------------------------------------------------------------
+
+  registerDividerUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity

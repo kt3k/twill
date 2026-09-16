@@ -386,6 +386,38 @@ func TestUtilitiesGradients(t *testing.T) {
 	expectInvalid(t, ds, "bg-linear", "bg-linear-to-x", "bg-linear-to-r/nope", "bg-linear-1.5", "bg-gradient-45", "bg-radial-x", "bg-radial-[at_center]/srgb", "bg-conic-x", "from-10", "from-10%/50", "from-nope", "to-nope")
 }
 
+func TestUtilitiesDividers(t *testing.T) {
+	ds := designSystemFor(t, "")
+	reverse := func(name string) string {
+		return "@property " + name + " {\n    syntax: \"*\";\n    inherits: false;\n    initial-value: 0;\n  }"
+	}
+	nested := func(decls ...string) string {
+		out := ":where(& > :not(:last-child)) {\n"
+		for _, d := range decls {
+			out += "    " + d + "\n"
+		}
+		return out + "  }"
+	}
+	expectDecls(t, ds, "space-x-4", reverse("--tw-space-x-reverse"), nested("--tw-space-x-reverse: 0;", "margin-inline-start: calc(--spacing(4) * var(--tw-space-x-reverse));", "margin-inline-end: calc(--spacing(4) * calc(1 - var(--tw-space-x-reverse)));"))
+	expectDecls(t, ds, "-space-y-px", reverse("--tw-space-y-reverse"), nested("--tw-space-y-reverse: 0;", "margin-block-start: calc(-1px * var(--tw-space-y-reverse));", "margin-block-end: calc(-1px * calc(1 - var(--tw-space-y-reverse)));"))
+	expectDecls(t, ds, "space-x-reverse", reverse("--tw-space-x-reverse"), nested("--tw-space-x-reverse: 1;"))
+	expectDecls(t, ds, "divide-x-2", reverse("--tw-divide-x-reverse"), borderStyleProperty, nested("--tw-divide-x-reverse: 0;", "border-inline-style: var(--tw-border-style);", "border-inline-start-width: calc(2px * var(--tw-divide-x-reverse));", "border-inline-end-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));"))
+	expectDecls(t, ds, "divide-y", reverse("--tw-divide-y-reverse"), borderStyleProperty, nested("--tw-divide-y-reverse: 0;", "border-block-style: var(--tw-border-style);", "border-block-start-width: calc(1px * var(--tw-divide-y-reverse));", "border-block-end-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));"))
+	expectDecls(t, ds, "divide-y-reverse", reverse("--tw-divide-y-reverse"), nested("--tw-divide-y-reverse: 1;"))
+	expectDecls(t, ds, "divide-red-500/50", nested("border-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);"))
+	expectDecls(t, ds, "divide-dashed", nested("--tw-border-style: dashed;", "border-style: dashed;"))
+	outlineStyle := "@property --tw-outline-style {\n    syntax: \"*\";\n    inherits: false;\n    initial-value: solid;\n  }"
+	expectDecls(t, ds, "outline", outlineStyle, "outline-style: var(--tw-outline-style);", "outline-width: 1px;")
+	expectDecls(t, ds, "outline-[3px]", outlineStyle, "outline-style: var(--tw-outline-style);", "outline-width: 3px;")
+	expectDecls(t, ds, "outline-red-500", "outline-color: var(--color-red-500);")
+	expectDecls(t, ds, "outline-[#fff]/50", "outline-color: color-mix(in oklab, #fff 50%, transparent);")
+	expectDecls(t, ds, "outline-none", "--tw-outline-style: none;", "outline-style: none;")
+	expectDecls(t, ds, "outline-hidden", "--tw-outline-style: none;", "outline-style: none;", "@media (forced-colors: active) {\n    outline: 2px solid transparent;\n    outline-offset: 2px;\n  }")
+	expectDecls(t, ds, "outline-dotted", "--tw-outline-style: dotted;", "outline-style: dotted;")
+	expectDecls(t, ds, "-outline-offset-2", "outline-offset: calc(2px * -1);")
+	expectInvalid(t, ds, "space-x", "space-x-1/2", "divide-x-2/50", "divide-x-nope", "divide-nope", "outline-2/50", "outline-nope", "outline-offset", "outline-offset-x")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")

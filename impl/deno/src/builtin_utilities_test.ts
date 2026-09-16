@@ -865,6 +865,113 @@ Deno.test("utilities: gradients", async () => {
   );
 });
 
+Deno.test("utilities: space, dividers, outlines", async () => {
+  const ds = await setup();
+  const reverse = (name: string) =>
+    `@property ${name} {\n    syntax: "*";\n    inherits: false;\n    initial-value: 0;\n  }`;
+  const nested = (...declarations: string[]) =>
+    `:where(& > :not(:last-child)) {\n${
+      declarations.map((d) => `    ${d}`).join("\n")
+    }\n  }`;
+  expectDecls(ds, "space-x-4", [
+    reverse("--tw-space-x-reverse"),
+    nested(
+      "--tw-space-x-reverse: 0;",
+      "margin-inline-start: calc(--spacing(4) * var(--tw-space-x-reverse));",
+      "margin-inline-end: calc(--spacing(4) * calc(1 - var(--tw-space-x-reverse)));",
+    ),
+  ]);
+  expectDecls(ds, "-space-y-px", [
+    reverse("--tw-space-y-reverse"),
+    nested(
+      "--tw-space-y-reverse: 0;",
+      "margin-block-start: calc(-1px * var(--tw-space-y-reverse));",
+      "margin-block-end: calc(-1px * calc(1 - var(--tw-space-y-reverse)));",
+    ),
+  ]);
+  expectDecls(ds, "space-x-reverse", [
+    reverse("--tw-space-x-reverse"),
+    nested("--tw-space-x-reverse: 1;"),
+  ]);
+  expectDecls(ds, "divide-x-2", [
+    reverse("--tw-divide-x-reverse"),
+    BORDER_STYLE_PROPERTY,
+    nested(
+      "--tw-divide-x-reverse: 0;",
+      "border-inline-style: var(--tw-border-style);",
+      "border-inline-start-width: calc(2px * var(--tw-divide-x-reverse));",
+      "border-inline-end-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));",
+    ),
+  ]);
+  expectDecls(ds, "divide-y", [
+    reverse("--tw-divide-y-reverse"),
+    BORDER_STYLE_PROPERTY,
+    nested(
+      "--tw-divide-y-reverse: 0;",
+      "border-block-style: var(--tw-border-style);",
+      "border-block-start-width: calc(1px * var(--tw-divide-y-reverse));",
+      "border-block-end-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));",
+    ),
+  ]);
+  expectDecls(ds, "divide-y-reverse", [
+    reverse("--tw-divide-y-reverse"),
+    nested("--tw-divide-y-reverse: 1;"),
+  ]);
+  expectDecls(ds, "divide-red-500/50", [
+    nested(
+      "border-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+    ),
+  ]);
+  expectDecls(ds, "divide-dashed", [
+    nested("--tw-border-style: dashed;", "border-style: dashed;"),
+  ]);
+  const OUTLINE_STYLE_PROPERTY = `@property --tw-outline-style {
+    syntax: "*";
+    inherits: false;
+    initial-value: solid;
+  }`;
+  expectDecls(ds, "outline", [
+    OUTLINE_STYLE_PROPERTY,
+    "outline-style: var(--tw-outline-style);",
+    "outline-width: 1px;",
+  ]);
+  expectDecls(ds, "outline-[3px]", [
+    OUTLINE_STYLE_PROPERTY,
+    "outline-style: var(--tw-outline-style);",
+    "outline-width: 3px;",
+  ]);
+  expectDecls(ds, "outline-red-500", ["outline-color: var(--color-red-500);"]);
+  expectDecls(ds, "outline-[#fff]/50", [
+    "outline-color: color-mix(in oklab, #fff 50%, transparent);",
+  ]);
+  expectDecls(ds, "outline-none", [
+    "--tw-outline-style: none;",
+    "outline-style: none;",
+  ]);
+  expectDecls(ds, "outline-hidden", [
+    "--tw-outline-style: none;",
+    "outline-style: none;",
+    "@media (forced-colors: active) {\n    outline: 2px solid transparent;\n    outline-offset: 2px;\n  }",
+  ]);
+  expectDecls(ds, "outline-dotted", [
+    "--tw-outline-style: dotted;",
+    "outline-style: dotted;",
+  ]);
+  expectDecls(ds, "-outline-offset-2", ["outline-offset: calc(2px * -1);"]);
+  expectInvalid(
+    ds,
+    "space-x",
+    "space-x-1/2",
+    "divide-x-2/50",
+    "divide-x-nope",
+    "divide-nope",
+    "outline-2/50",
+    "outline-nope",
+    "outline-offset",
+    "outline-offset-x",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);
