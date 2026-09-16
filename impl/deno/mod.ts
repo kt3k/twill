@@ -54,3 +54,5 @@ export {
 } from "./src/compile_candidates.ts";
 export { optimizeAst } from "./src/optimize.ts";
 export { PROPERTY_ORDER } from "./src/property_order.ts";
+export { Scanner } from "./src/scanner.ts";
+export { extractCandidates } from "./src/extract.ts";

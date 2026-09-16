@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "license": "MIT",
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./cli": "./cli.ts"
   },
   "tasks": {
-    "test": "deno test --allow-read=.",
+    "test": "deno test -A",
     "gen": "deno run --allow-read=. --allow-write=src/bundled_css.ts scripts/gen_bundled_css.ts",
-    "check": "deno fmt --check && deno lint && deno check mod.ts",
+    "check": "deno fmt --check && deno lint && deno check mod.ts cli.ts",
     "ok": "deno task check && deno task test"
   },
   "imports": {
