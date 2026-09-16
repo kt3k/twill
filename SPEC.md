@@ -1228,8 +1228,60 @@ Effects, transitions, interactivity:
   `a / b`; `aspect-square`, `aspect-video`, `aspect-auto`), `columns-*`, `object-{contain,
   cover,fill,none,scale-down}`, `accent-*`, `caret-*`, `fill-*`, `stroke-*` (`colorUtility`).
 
-Implementations MAY provide additional utilities (shadows, rings, gradients, masks, transforms,
-filters, and others) using the same helpers and the same variable conventions.
+Shadows and rings:
+
+Let `BOX_SHADOW` be the value `var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)`. Every utility in this
+group emits, before its declarations, the `at-root` registrations (Section 10.4) for the
+variables below, in this order:
+
+- `--tw-shadow`, `--tw-shadow-color`, `--tw-inset-shadow`, `--tw-inset-shadow-color`,
+  `--tw-ring-color`, `--tw-ring-shadow`, `--tw-inset-ring-color`, `--tw-inset-ring-shadow`,
+  `--tw-ring-inset`, `--tw-ring-offset-width`, `--tw-ring-offset-color`,
+  `--tw-ring-offset-shadow`.
+- `--tw-shadow`, `--tw-inset-shadow`, `--tw-ring-shadow`, `--tw-inset-ring-shadow`, and
+  `--tw-ring-offset-shadow` have the initial value `0 0 #0000`; `--tw-ring-offset-width` has
+  `0px`; `--tw-ring-offset-color` has `#fff`; the others have no initial value.
+
+`replaceShadowColors(value, fn)` rewrites the colors of a `box-shadow` value: split `value` on
+top-level commas; split each shadow on top-level whitespace; a token equal to `inset`, `inherit`,
+`initial`, `revert`, or `unset` is a keyword, a token starting with a digit, with `.`, or with
+`-` followed by a digit or `.` is a length, and the first remaining token is the color. A shadow
+with fewer than two length tokens is left unchanged. Otherwise the color token is replaced with
+`fn(color)`, or `fn(currentcolor)` is appended when the shadow has no color token. The tokens
+keep their order and are joined with single spaces; the shadows are joined with `, `.
+
+- `shadow`, `shadow-<key>`: take the raw value (`resolveValue`, so that colors can be
+  rewritten) from `--shadow` (the namespace itself for the bare form); emit
+  `--tw-shadow: <replaceShadowColors(v, c => var(--tw-shadow-color, c))>` and
+  `box-shadow: BOX_SHADOW`. A modifier is applied to each `c` as a color modifier (Section
+  10.3) before it is wrapped; an unresolvable modifier invalidates the candidate. A named value
+  resolves first as a color (`--box-shadow-color`, `--color`) giving
+  `--tw-shadow-color: <color>` (with the modifier applied), then as a shadow. An arbitrary value
+  that infers `color` is a color; any other arbitrary value is a shadow. `shadow-none` is
+  `--tw-shadow: 0 0 #0000` plus `box-shadow: BOX_SHADOW`.
+- `inset-shadow`, `inset-shadow-<key>`, `inset-shadow-none`: as `shadow-*` with the namespace
+  `--inset-shadow`, the variables `--tw-inset-shadow` and `--tw-inset-shadow-color`, and the
+  same color namespaces. Each shadow of an arbitrary value that has no `inset` keyword is
+  prefixed with `inset `.
+- `ring`, `ring-<n>`: the width is `--default-ring-width` (theme) or `1px` for the bare form, a
+  named value from `--ring-width`, a bare non-negative integer as `<n>px`, or an arbitrary value
+  inferring `length` or `line-width`; emit `--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0
+  calc(<w> + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)` and
+  `box-shadow: BOX_SHADOW`. A named or arbitrary color (`--ring-color`, `--color`) gives
+  `--tw-ring-color: <color>`; a modifier on a width invalidates the candidate. `ring-inset` is
+  `--tw-ring-inset: inset`.
+- `inset-ring`, `inset-ring-<n>`: as `ring-*` emitting `--tw-inset-ring-shadow: inset 0 0 0 <w>
+  var(--tw-inset-ring-color, currentcolor)` and `box-shadow: BOX_SHADOW`; colors give
+  `--tw-inset-ring-color`.
+- `ring-offset-<n>`: a named value from `--ring-offset-width`, a bare non-negative integer as
+  `<n>px`, or an arbitrary length; emit `--tw-ring-offset-width: <w>` and
+  `--tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width)
+  var(--tw-ring-offset-color)`. A color (`--ring-offset-color`, `--color`) gives
+  `--tw-ring-offset-color: <color>`.
+
+Implementations MAY provide additional utilities (gradients, masks, transforms, filters, and
+others) using the same helpers and the same variable conventions.
 
 ## 11. Compilation and Ordering
 

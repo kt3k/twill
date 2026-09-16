@@ -186,6 +186,76 @@ func TestUtilitiesBackgroundsBorders(t *testing.T) {
 	expectDecls(t, custom, "bg-red-500/half", "background-color: color-mix(in oklab, var(--color-red-500) var(--opacity-half), transparent);")
 }
 
+func shadowRegistrations() []string {
+	props := [][2]string{
+		{"--tw-shadow", "0 0 #0000"}, {"--tw-shadow-color", ""}, {"--tw-inset-shadow", "0 0 #0000"},
+		{"--tw-inset-shadow-color", ""}, {"--tw-ring-color", ""}, {"--tw-ring-shadow", "0 0 #0000"},
+		{"--tw-inset-ring-color", ""}, {"--tw-inset-ring-shadow", "0 0 #0000"}, {"--tw-ring-inset", ""},
+		{"--tw-ring-offset-width", "0px"}, {"--tw-ring-offset-color", "#fff"}, {"--tw-ring-offset-shadow", "0 0 #0000"},
+	}
+	var out []string
+	for _, p := range props {
+		reg := "@property " + p[0] + " {\n    syntax: \"*\";\n    inherits: false;\n"
+		if p[1] != "" {
+			reg += "    initial-value: " + p[1] + ";\n"
+		}
+		out = append(out, reg+"  }")
+	}
+	return out
+}
+
+const boxShadowDecl = "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);"
+
+func TestUtilitiesShadowsAndRings(t *testing.T) {
+	ds := designSystemFor(t, `@import "twill";
+    @theme { --ring-width-thick: 4px; --box-shadow-color-glow: #ff0; }`)
+	shadow := func(raw string, declarations ...string) {
+		t.Helper()
+		expectDecls(t, ds, raw, append(shadowRegistrations(), declarations...)...)
+	}
+	shadow("shadow", "--tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));", boxShadowDecl)
+	shadow("shadow-lg", "--tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));", boxShadowDecl)
+	shadow("shadow-2xl/50", "--tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, color-mix(in oklab, rgb(0 0 0 / 0.25) 50%, transparent));", boxShadowDecl)
+	shadow("shadow-none", "--tw-shadow: 0 0 #0000;", boxShadowDecl)
+	shadow("shadow-red-500", "--tw-shadow-color: var(--color-red-500);")
+	shadow("shadow-red-500/50", "--tw-shadow-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);")
+	shadow("shadow-glow", "--tw-shadow-color: var(--box-shadow-color-glow);")
+	shadow("shadow-current", "--tw-shadow-color: currentcolor;")
+	shadow("shadow-[0_0_3px_red,0_0_6px]", "--tw-shadow: 0 0 3px var(--tw-shadow-color, red), 0 0 6px var(--tw-shadow-color, currentcolor);", boxShadowDecl)
+	shadow("shadow-[#fff]", "--tw-shadow-color: #fff;")
+	shadow("shadow-[color:var(--c)]", "--tw-shadow-color: var(--c);")
+	shadow("shadow-[var(--s)]", "--tw-shadow: var(--s);", boxShadowDecl)
+	shadow("inset-shadow-sm", "--tw-inset-shadow: inset 0 2px 4px var(--tw-inset-shadow-color, rgb(0 0 0 / 0.05));", boxShadowDecl)
+	shadow("inset-shadow-[0_2px_4px_red]", "--tw-inset-shadow: inset 0 2px 4px var(--tw-inset-shadow-color, red);", boxShadowDecl)
+	shadow("inset-shadow-[inset_0_2px_red]", "--tw-inset-shadow: inset 0 2px var(--tw-inset-shadow-color, red);", boxShadowDecl)
+	shadow("inset-shadow-none", "--tw-inset-shadow: 0 0 #0000;", boxShadowDecl)
+	shadow("inset-shadow-red-500", "--tw-inset-shadow-color: var(--color-red-500);")
+	shadow("ring", "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);", boxShadowDecl)
+	shadow("ring-2", "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);", boxShadowDecl)
+	shadow("ring-thick", "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(var(--ring-width-thick) + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);", boxShadowDecl)
+	shadow("ring-[3px]", "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);", boxShadowDecl)
+	shadow("ring-red-500/30", "--tw-ring-color: color-mix(in oklab, var(--color-red-500) 30%, transparent);")
+	shadow("ring-[#000]", "--tw-ring-color: #000;")
+	shadow("ring-inset", "--tw-ring-inset: inset;")
+	shadow("inset-ring", "--tw-inset-ring-shadow: inset 0 0 0 1px var(--tw-inset-ring-color, currentcolor);", boxShadowDecl)
+	shadow("inset-ring-2", "--tw-inset-ring-shadow: inset 0 0 0 2px var(--tw-inset-ring-color, currentcolor);", boxShadowDecl)
+	shadow("inset-ring-blue-500", "--tw-inset-ring-color: var(--color-blue-500);")
+	shadow("ring-offset-2", "--tw-ring-offset-width: 2px;", "--tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);")
+	shadow("ring-offset-[3px]", "--tw-ring-offset-width: 3px;", "--tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);")
+	shadow("ring-offset-white", "--tw-ring-offset-color: var(--color-white);")
+	expectInvalid(t, ds, "shadow-nope", "shadow-lg/foo", "inset-shadow", "ring-x", "ring-2/50", "ring-[3px]/50", "ring-offset", "ring-offset-2/50", "inset-ring-x")
+}
+
+func TestReplaceShadowColors(t *testing.T) {
+	wrap := func(c string) string { return "<" + c + ">" }
+	assertEqual(t, ReplaceShadowColors("0 0 3px red, inset 0 1px", wrap, false), "0 0 3px <red>, inset 0 1px <currentcolor>")
+	assertEqual(t, ReplaceShadowColors("none", wrap, false), "none")
+	assertEqual(t, ReplaceShadowColors("var(--x)", wrap, false), "var(--x)")
+	assertEqual(t, ReplaceShadowColors("0 2px 4px rgb(0 0 0 / 0.1)", wrap, true), "inset 0 2px 4px <rgb(0 0 0 / 0.1)>")
+	assertEqual(t, ReplaceShadowColors("inset 0 2px 4px #000", wrap, true), "inset 0 2px 4px <#000>")
+	assertEqual(t, ReplaceShadowColors("0px  1px\n  0px #000", wrap, false), "0px 1px 0px <#000>")
+}
+
 func TestUtilitiesEffects(t *testing.T) {
 	ds := designSystemFor(t, "")
 	expectDecls(t, ds, "opacity-[.5]", "opacity: .5;")

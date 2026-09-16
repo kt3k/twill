@@ -398,6 +398,148 @@ Deno.test("utilities: default border width from the theme", async () => {
   ]);
 });
 
+const SHADOW_PROPERTIES: [string, string | null][] = [
+  ["--tw-shadow", "0 0 #0000"],
+  ["--tw-shadow-color", null],
+  ["--tw-inset-shadow", "0 0 #0000"],
+  ["--tw-inset-shadow-color", null],
+  ["--tw-ring-color", null],
+  ["--tw-ring-shadow", "0 0 #0000"],
+  ["--tw-inset-ring-color", null],
+  ["--tw-inset-ring-shadow", "0 0 #0000"],
+  ["--tw-ring-inset", null],
+  ["--tw-ring-offset-width", "0px"],
+  ["--tw-ring-offset-color", "#fff"],
+  ["--tw-ring-offset-shadow", "0 0 #0000"],
+];
+const SHADOW_REGISTRATIONS = SHADOW_PROPERTIES.map(([name, initial]) =>
+  `@property ${name} {\n    syntax: "*";\n    inherits: false;\n` +
+  (initial === null ? "" : `    initial-value: ${initial};\n`) + "  }"
+);
+const BOX_SHADOW =
+  "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);";
+
+Deno.test("utilities: shadows and rings", async () => {
+  const ds = await designSystemFor(`@import "twill";
+    @theme { --ring-width-thick: 4px; --box-shadow-color-glow: #ff0; }`);
+  const shadow = (raw: string, ...declarations: string[]) =>
+    expectDecls(ds, raw, [...SHADOW_REGISTRATIONS, ...declarations]);
+  shadow(
+    "shadow",
+    "--tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));",
+    BOX_SHADOW,
+  );
+  shadow(
+    "shadow-lg",
+    "--tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));",
+    BOX_SHADOW,
+  );
+  shadow(
+    "shadow-2xl/50",
+    "--tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, color-mix(in oklab, rgb(0 0 0 / 0.25) 50%, transparent));",
+    BOX_SHADOW,
+  );
+  shadow("shadow-none", "--tw-shadow: 0 0 #0000;", BOX_SHADOW);
+  shadow("shadow-red-500", "--tw-shadow-color: var(--color-red-500);");
+  shadow(
+    "shadow-red-500/50",
+    "--tw-shadow-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+  );
+  shadow("shadow-glow", "--tw-shadow-color: var(--box-shadow-color-glow);");
+  shadow("shadow-current", "--tw-shadow-color: currentcolor;");
+  shadow(
+    "shadow-[0_0_3px_red,0_0_6px]",
+    "--tw-shadow: 0 0 3px var(--tw-shadow-color, red), 0 0 6px var(--tw-shadow-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow("shadow-[#fff]", "--tw-shadow-color: #fff;");
+  shadow("shadow-[color:var(--c)]", "--tw-shadow-color: var(--c);");
+  shadow("shadow-[var(--s)]", "--tw-shadow: var(--s);", BOX_SHADOW);
+  shadow(
+    "inset-shadow-sm",
+    "--tw-inset-shadow: inset 0 2px 4px var(--tw-inset-shadow-color, rgb(0 0 0 / 0.05));",
+    BOX_SHADOW,
+  );
+  shadow(
+    "inset-shadow-[0_2px_4px_red]",
+    "--tw-inset-shadow: inset 0 2px 4px var(--tw-inset-shadow-color, red);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "inset-shadow-[inset_0_2px_red]",
+    "--tw-inset-shadow: inset 0 2px var(--tw-inset-shadow-color, red);",
+    BOX_SHADOW,
+  );
+  shadow("inset-shadow-none", "--tw-inset-shadow: 0 0 #0000;", BOX_SHADOW);
+  shadow(
+    "inset-shadow-red-500",
+    "--tw-inset-shadow-color: var(--color-red-500);",
+  );
+  shadow(
+    "ring",
+    "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "ring-2",
+    "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "ring-thick",
+    "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(var(--ring-width-thick) + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "ring-[3px]",
+    "--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "ring-red-500/30",
+    "--tw-ring-color: color-mix(in oklab, var(--color-red-500) 30%, transparent);",
+  );
+  shadow("ring-[#000]", "--tw-ring-color: #000;");
+  shadow("ring-inset", "--tw-ring-inset: inset;");
+  shadow(
+    "inset-ring",
+    "--tw-inset-ring-shadow: inset 0 0 0 1px var(--tw-inset-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "inset-ring-2",
+    "--tw-inset-ring-shadow: inset 0 0 0 2px var(--tw-inset-ring-color, currentcolor);",
+    BOX_SHADOW,
+  );
+  shadow(
+    "inset-ring-blue-500",
+    "--tw-inset-ring-color: var(--color-blue-500);",
+  );
+  shadow(
+    "ring-offset-2",
+    "--tw-ring-offset-width: 2px;",
+    "--tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);",
+  );
+  shadow(
+    "ring-offset-[3px]",
+    "--tw-ring-offset-width: 3px;",
+    "--tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);",
+  );
+  shadow("ring-offset-white", "--tw-ring-offset-color: var(--color-white);");
+  expectInvalid(
+    ds,
+    "shadow-nope",
+    "shadow-lg/foo",
+    "inset-shadow",
+    "ring-x",
+    "ring-2/50",
+    "ring-[3px]/50",
+    "ring-offset",
+    "ring-offset-2/50",
+    "inset-ring-x",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);
