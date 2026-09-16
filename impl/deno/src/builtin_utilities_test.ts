@@ -972,6 +972,119 @@ Deno.test("utilities: space, dividers, outlines", async () => {
   );
 });
 
+Deno.test("utilities: typography, layout, table, scrolling extensions", async () => {
+  const ds = await setup();
+  const registration = (name: string, initial?: string) =>
+    `@property ${name} {\n    syntax: "*";\n    inherits: false;\n` +
+    (initial === undefined ? "" : `    initial-value: ${initial};\n`) + "  }";
+  expectDecls(ds, "line-clamp-3", [
+    "overflow: hidden;",
+    "display: -webkit-box;",
+    "-webkit-box-orient: vertical;",
+    "-webkit-line-clamp: 3;",
+  ]);
+  expectDecls(ds, "line-clamp-none", [
+    "overflow: visible;",
+    "display: block;",
+    "-webkit-box-orient: horizontal;",
+    "-webkit-line-clamp: unset;",
+  ]);
+  expectDecls(ds, "decoration-red-500/50", [
+    "text-decoration-color: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+  ]);
+  expectDecls(ds, "decoration-wavy", ["text-decoration-style: wavy;"]);
+  expectDecls(ds, "decoration-2", ["text-decoration-thickness: 2px;"]);
+  expectDecls(ds, "decoration-[10%]", ["text-decoration-thickness: 10%;"]);
+  expectDecls(ds, "hyphens-auto", ["-webkit-hyphens: auto;", "hyphens: auto;"]);
+  expectDecls(ds, "tabular-nums", [
+    registration("--tw-ordinal"),
+    registration("--tw-slashed-zero"),
+    registration("--tw-numeric-figure"),
+    registration("--tw-numeric-spacing"),
+    registration("--tw-numeric-fraction"),
+    "--tw-numeric-spacing: tabular-nums;",
+    "font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);",
+  ]);
+  expectDecls(ds, "normal-nums", ["font-variant-numeric: normal;"]);
+  expectDecls(ds, "align-text-top", ["vertical-align: text-top;"]);
+  expectDecls(ds, "font-stretch-50%", ["font-stretch: 50%;"]);
+  expectDecls(ds, "font-stretch-condensed", ["font-stretch: condensed;"]);
+  expectDecls(ds, "text-shadow-2xs", [
+    "text-shadow: 0px 1px 0px var(--tw-text-shadow-color, rgb(0 0 0 / 0.15));",
+  ]);
+  expectDecls(ds, "text-shadow-red-500", [
+    registration("--tw-text-shadow-color"),
+    "--tw-text-shadow-color: var(--color-red-500);",
+  ]);
+  expectDecls(ds, "wrap-anywhere", ["overflow-wrap: anywhere;"]);
+  expectDecls(ds, "content-none", [
+    registration("--tw-content", '""'),
+    "--tw-content: none;",
+    "content: none;",
+  ]);
+  expectDecls(ds, "bg-blend-multiply", ["background-blend-mode: multiply;"]);
+  expectDecls(ds, "mix-blend-plus-lighter", ["mix-blend-mode: plus-lighter;"]);
+  expectDecls(ds, "container", [
+    "width: 100%;",
+    "@media (width >= 40rem) {\n    max-width: 40rem;\n  }",
+    "@media (width >= 48rem) {\n    max-width: 48rem;\n  }",
+    "@media (width >= 64rem) {\n    max-width: 64rem;\n  }",
+    "@media (width >= 80rem) {\n    max-width: 80rem;\n  }",
+    "@media (width >= 96rem) {\n    max-width: 96rem;\n  }",
+  ]);
+  expectDecls(ds, "break-inside-avoid-column", ["break-inside: avoid-column;"]);
+  expectDecls(ds, "box-decoration-clone", ["box-decoration-break: clone;"]);
+  expectDecls(ds, "object-[10px_20px]", ["object-position: 10px 20px;"]);
+  expectDecls(ds, "-start-4", ["inset-inline-start: --spacing(-4);"]);
+  expectDecls(ds, "end-auto", ["inset-inline-end: auto;"]);
+  expectDecls(ds, "border-spacing-x-2", [
+    registration("--tw-border-spacing-x", "0"),
+    registration("--tw-border-spacing-y", "0"),
+    "--tw-border-spacing-x: --spacing(2);",
+    "border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);",
+  ]);
+  expectDecls(ds, "table-fixed", ["table-layout: fixed;"]);
+  expectDecls(ds, "-scroll-mt-4", ["scroll-margin-top: --spacing(-4);"]);
+  expectDecls(ds, "scroll-px-[3px]", ["scroll-padding-inline: 3px;"]);
+  expectDecls(ds, "snap-both", [
+    registration("--tw-scroll-snap-strictness", "proximity"),
+    "scroll-snap-type: both var(--tw-scroll-snap-strictness);",
+  ]);
+  expectDecls(ds, "snap-mandatory", [
+    registration("--tw-scroll-snap-strictness", "proximity"),
+    "--tw-scroll-snap-strictness: mandatory;",
+  ]);
+  expectDecls(ds, "touch-pinch-zoom", [
+    registration("--tw-pan-x"),
+    registration("--tw-pan-y"),
+    registration("--tw-pinch-zoom"),
+    "--tw-pinch-zoom: pinch-zoom;",
+    "touch-action: var(--tw-pan-x,) var(--tw-pan-y,) var(--tw-pinch-zoom,);",
+  ]);
+  expectDecls(ds, "stroke-2", ["stroke-width: 2;"]);
+  expectDecls(ds, "stroke-[2px]", ["stroke-width: 2px;"]);
+  expectDecls(ds, "stroke-red-500/50", [
+    "stroke: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+  ]);
+  expectDecls(ds, "scheme-light-dark", ["color-scheme: light dark;"]);
+  expectDecls(ds, "field-sizing-content", ["field-sizing: content;"]);
+  expectInvalid(
+    ds,
+    "line-clamp",
+    "line-clamp-1.5",
+    "decoration-2/50",
+    "decoration-nope",
+    "align-nope",
+    "font-stretch-50",
+    "text-shadow-nope",
+    "bg-blend-plus-lighter",
+    "-scroll-p-4",
+    "-border-spacing-2",
+    "stroke-1.5",
+    "stroke-2/50",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);

@@ -1,0 +1,11 @@
+@import "twill/theme.css";
+@theme {
+  --breakpoint-3xl: 120rem;
+  --breakpoint-xs: 20rem;
+  --line-clamp-short: 2;
+  --text-decoration-thickness-fat: 4px;
+  --font-stretch-wide: 150%;
+  --stroke-width-bold: 3;
+  --text-shadow-color-glow: #ff0;
+}
+@twill utilities;

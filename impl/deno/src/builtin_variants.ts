@@ -168,19 +168,29 @@ function compareQueryValues(
     if (aValue === null && zValue === null) return 0;
     if (aValue === null) return direction === "asc" ? -1 : 1;
     if (zValue === null) return direction === "asc" ? 1 : -1;
-    if (aValue === zValue) return 0;
-
-    const aBucket = bucketOf(aValue);
-    const zBucket = bucketOf(zValue);
-    if (aBucket !== zBucket) return aBucket < zBucket ? -1 : 1;
-
-    const aNumber = parseFloat(aValue);
-    const zNumber = parseFloat(zValue);
-    if (Number.isNaN(aNumber) || Number.isNaN(zNumber)) {
-      return aValue < zValue ? -1 : 1;
-    }
-    return direction === "asc" ? aNumber - zNumber : zNumber - aNumber;
+    const result = compareQueryValueStrings(aValue, zValue);
+    return direction === "asc" ? result : -result;
   };
+}
+
+/**
+ * Compares two breakpoint or container values: by unit bucket, then
+ * numerically (SPEC §9.5).
+ */
+export function compareQueryValueStrings(
+  aValue: string,
+  zValue: string,
+): number {
+  if (aValue === zValue) return 0;
+  const aBucket = bucketOf(aValue);
+  const zBucket = bucketOf(zValue);
+  if (aBucket !== zBucket) return aBucket < zBucket ? -1 : 1;
+  const aNumber = parseFloat(aValue);
+  const zNumber = parseFloat(zValue);
+  if (Number.isNaN(aNumber) || Number.isNaN(zNumber)) {
+    return aValue < zValue ? -1 : 1;
+  }
+  return aNumber - zNumber;
 }
 
 function bucketOf(value: string): string {

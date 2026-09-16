@@ -186,27 +186,36 @@ func compareQueryValues(theme *Theme, namespace string, ascending bool) VariantC
 		case aValue == zValue:
 			return 0
 		}
-		aBucket, zBucket := bucketOf(aValue), bucketOf(zValue)
-		if aBucket != zBucket {
-			return compareStrings(aBucket, zBucket)
-		}
-		aNumber, aErr := strconv.ParseFloat(numberPrefixPattern.FindString(aValue), 64)
-		zNumber, zErr := strconv.ParseFloat(numberPrefixPattern.FindString(zValue), 64)
-		if aErr != nil || zErr != nil {
-			return compareStrings(aValue, zValue)
-		}
-		diff := aNumber - zNumber
+		result := CompareQueryValues(aValue, zValue)
 		if !ascending {
-			diff = -diff
+			return -result
 		}
-		switch {
-		case diff < 0:
-			return -1
-		case diff > 0:
-			return 1
-		}
+		return result
+	}
+}
+
+// CompareQueryValues compares two breakpoint or container values: by unit
+// bucket, then numerically (SPEC §9.5).
+func CompareQueryValues(aValue, zValue string) int {
+	if aValue == zValue {
 		return 0
 	}
+	aBucket, zBucket := bucketOf(aValue), bucketOf(zValue)
+	if aBucket != zBucket {
+		return compareStrings(aBucket, zBucket)
+	}
+	aNumber, aErr := strconv.ParseFloat(numberPrefixPattern.FindString(aValue), 64)
+	zNumber, zErr := strconv.ParseFloat(numberPrefixPattern.FindString(zValue), 64)
+	if aErr != nil || zErr != nil {
+		return compareStrings(aValue, zValue)
+	}
+	switch {
+	case aNumber < zNumber:
+		return -1
+	case aNumber > zNumber:
+		return 1
+	}
+	return 0
 }
 
 // RegisterBuiltinVariants registers every built-in variant in the order of SPEC §9.5.
