@@ -1,3 +1,12 @@
 (library
  (name twill)
  (libraries str unix))
+
+(rule
+ (targets bundled_css.ml)
+ (deps
+  (glob_files ../css/*.css))
+ (action
+  (with-stdout-to
+   bundled_css.ml
+   (run %{exe:../tools/gen_bundled.exe} ../css))))
