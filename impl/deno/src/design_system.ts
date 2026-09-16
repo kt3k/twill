@@ -7,6 +7,7 @@
 
 import { registerBuiltinUtilities } from "./builtin_utilities.ts";
 import { registerBuiltinVariants } from "./builtin_variants.ts";
+import { cloneNode } from "./ast.ts";
 import {
   type Candidate,
   parseCandidate as parseCandidateImpl,
@@ -14,6 +15,10 @@ import {
   parseVariant as parseVariantImpl,
   type Variant,
 } from "./candidate.ts";
+import {
+  compileAstNodes as compileAstNodesImpl,
+  type CompiledRule,
+} from "./compile_candidates.ts";
 import type { Theme } from "./theme.ts";
 import { Utilities } from "./utilities.ts";
 import { Variants } from "./variants.ts";
@@ -28,6 +33,7 @@ export class DesignSystem implements ParserContext {
 
   readonly #candidateCache = new Map<string, Candidate[]>();
   readonly #variantCache = new Map<string, Variant | null>();
+  readonly #compileCache = new Map<Candidate, Map<number, CompiledRule[]>>();
   #variantOrder: Map<Variant, number> | null = null;
 
   constructor(theme: Theme) {
@@ -78,9 +84,31 @@ export class DesignSystem implements ParserContext {
     return order;
   }
 
-  /** Drops memoized candidates; used after registries change. */
+  /**
+   * Compiles a candidate interpretation, memoized per candidate object and
+   * flags. Cached results are cloned so callers may mutate them.
+   */
+  compileAstNodes(candidate: Candidate, flags: number): CompiledRule[] {
+    let byFlags = this.#compileCache.get(candidate);
+    if (byFlags === undefined) {
+      byFlags = new Map();
+      this.#compileCache.set(candidate, byFlags);
+    }
+    let cached = byFlags.get(flags);
+    if (cached === undefined) {
+      cached = compileAstNodesImpl(candidate, flags, this);
+      byFlags.set(flags, cached);
+    }
+    return cached.map((r) => ({
+      node: cloneNode(r.node),
+      propertySort: r.propertySort,
+    }));
+  }
+
+  /** Drops memoized candidates and compiled results; used after registries change. */
   clearCandidateCache(): void {
     this.#candidateCache.clear();
+    this.#compileCache.clear();
   }
 }
 
