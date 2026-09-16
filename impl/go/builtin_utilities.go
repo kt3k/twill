@@ -611,6 +611,9 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	// Gradients.
 	RegisterGradientUtilities(u, theme)
 
+	// Space, dividers, and outlines.
+	RegisterDividerUtilities(u, theme)
+
 	// Effects, transitions, interactivity.
 	fn("opacity", FunctionalUtilityDescription{ThemeKeys: []string{"--opacity"},
 		HandleBareValue: func(v *CandidateValue) (string, bool) { return v.Value + "%", IsMultipleOfQuarter(v.Value) },

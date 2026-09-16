@@ -1403,6 +1403,45 @@ candidate.
 - `to-<color>`: registrations, `--tw-gradient-to: <color>`, `--tw-gradient-stops: STOPS`.
   `to-<n>%`: `--tw-gradient-to-position`.
 
+Space, dividers, and outlines:
+
+Let `CHILDREN` be the nested style rule with the selector `:where(& > :not(:last-child))`; the
+utilities below that target children emit their declarations inside it (the compiler flattens
+it, Section 12.3).
+
+- `space-x-<v>`, `space-y-<v>`: `spacingUtility` (`--spacing`) with negative; emit the
+  registration for `--tw-space-x-reverse` (or `-y-`, initial `0`) and `CHILDREN` containing
+  `--tw-space-x-reverse: 0`, `margin-inline-start: calc(<v> * var(--tw-space-x-reverse))`,
+  `margin-inline-end: calc(<v> * calc(1 - var(--tw-space-x-reverse)))` (for `y`:
+  `margin-block-start` and `margin-block-end` with `--tw-space-y-reverse`).
+  `space-x-reverse`, `space-y-reverse`: the registration and `CHILDREN` containing
+  `--tw-space-x-reverse: 1`.
+- `divide-x`, `divide-x-<v>`, `divide-y`, `divide-y-<v>`: the width is
+  `--default-border-width` (theme) or `1px` for the bare form, a named value from
+  `--divide-width`, a bare non-negative integer as `<n>px`, or an arbitrary value inferring
+  `length` or `line-width` (no modifier); emit the registrations for `--tw-divide-x-reverse`
+  (initial `0`) and `--tw-border-style` (initial `solid`) and `CHILDREN` containing
+  `--tw-divide-x-reverse: 0`, `border-inline-style: var(--tw-border-style)`,
+  `border-inline-start-width: calc(<v> * var(--tw-divide-x-reverse))`,
+  `border-inline-end-width: calc(<v> * calc(1 - var(--tw-divide-x-reverse)))` (for `y`:
+  `border-block-style`, `border-block-start-width`, `border-block-end-width`,
+  `--tw-divide-y-reverse`). `divide-x-reverse`, `divide-y-reverse`: the reverse registration and
+  `CHILDREN` containing `--tw-divide-x-reverse: 1`.
+- `divide-<color>` (`--divide-color`, `--color`; `colorUtility`): `CHILDREN` containing
+  `border-color: <color>`. `divide-{solid,dashed,dotted,double,none}`: `CHILDREN` containing
+  `--tw-border-style: <style>` and `border-style: <style>`.
+- `outline`, `outline-<v>`: the width is `1px` for the bare form, a named value from
+  `--outline-width`, a bare non-negative integer as `<n>px`, or an arbitrary value inferring
+  `length` or `line-width` (no modifier); emit the registration for `--tw-outline-style`
+  (initial `solid`), `outline-style: var(--tw-outline-style)`, `outline-width: <v>`. A named or
+  arbitrary color (`--outline-color`, `--color`) gives `outline-color: <color>`.
+  `outline-none`: `--tw-outline-style: none`, `outline-style: none`. `outline-hidden`: the same
+  followed by a nested `@media (forced-colors: active)` containing `outline: 2px solid
+  transparent` and `outline-offset: 2px`. `outline-{solid,dashed,dotted,double}`:
+  `--tw-outline-style: <style>`, `outline-style: <style>`.
+- `outline-offset-<v>`: `outline-offset` (`--outline-offset`); a bare non-negative integer as
+  `<n>px`; negative supported.
+
 Implementations MAY provide additional utilities (masks and others) using the same helpers and
 the same variable conventions.
 
