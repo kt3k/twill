@@ -123,7 +123,7 @@ Important boundary:
 
 ### 3.3 External Dependencies
 
-- A local filesystem for reading the entry stylesheet, bundled stylesheets, and source files.
+- A local filesystem for reading the entry stylesheet and source files.
 - OPTIONAL filesystem event notification for watch mode (polling is the fallback).
 - OPTIONAL CSS minifier for `--minify` and `--optimize`.
 
@@ -391,10 +391,11 @@ every parameter is consumed the `@media` wrapper is removed and its children are
 - `source(<path>)`: rewrite the first `@twill utilities` inside to `@twill utilities source(<path>)`
   and wrap it in `context { sourceBase: <base of the importing file> }`.
 
-### 6.3 Bundled Stylesheets
+### 6.3 Built-in Stylesheets
 
-An implementation MUST ship four stylesheets and MUST resolve the import id `twill` to the entry
-file among them:
+An implementation MUST provide four built-in stylesheets and MUST resolve the import id `twill` to
+the entry stylesheet among them. The built-in stylesheets are logical resources identified by
+name, not files on disk:
 
 - `index.css`: `@layer theme, base, components, utilities;` followed by `@import './theme.css'
   layer(theme);`, `@import './preflight.css' layer(base);`, and `@import './utilities.css'
@@ -405,6 +406,15 @@ file among them:
   `@keyframes`, blur values, and `--default-*` settings.
 - `preflight.css`: base element resets.
 - `utilities.css`: the single statement `@twill utilities;`.
+
+Implementations SHOULD embed the text of these stylesheets in the compiled program (for example
+as string constants or compile-time included resources) so that the compiler is self-contained.
+Publishing them as separate CSS files is not required. The loader (Section 6.2) resolves the id
+`twill` to the embedded entry stylesheet, and the relative ids `./theme.css`, `./preflight.css`,
+and `./utilities.css` requested from inside that stylesheet resolve to the corresponding embedded
+resources rather than to the filesystem. The `base` returned for an embedded resource is
+implementation-defined but MUST be distinct from any user directory, and a relative import that
+originates from user CSS MUST NOT resolve to an embedded resource.
 
 The default theme values that this specification's examples depend on are:
 
@@ -529,7 +539,7 @@ Inside a rule: `@apply <candidate> [<candidate>...];`
   `&:hover { ... }` (with its `@media`) inside the host rule.
 - Every candidate MUST compile. Otherwise raise an error; the message SHOULD distinguish: a
   missing prefix when a prefix is configured, a candidate disabled by `@source not inline`, a
-  variant that does not exist, an empty theme (the bundled stylesheet was not imported), and an
+  variant that does not exist, an empty theme (the built-in stylesheet was not imported), and an
   unknown utility.
 - `@apply` inside `@utility` bodies MAY reference other custom utilities. Build a dependency graph
   from `@utility` roots referenced by each `@apply`, sort it topologically, and expand in that
@@ -635,7 +645,7 @@ match `--text-shadow-sm`.
 
 - `inline`: consumers embed raw values; the variable is still printed.
 - `reference`: the variable is not printed; consumers embed `var(key, value)`.
-- `default`: user-defined entries win regardless of order. The bundled `theme.css` uses this.
+- `default`: user-defined entries win regardless of order. The built-in `theme.css` uses this.
 - `static`: the variable is printed even when unused.
 
 ### 7.5 Emission
@@ -1504,8 +1514,9 @@ Behavior:
 ### 14.2 Single Build
 
 1. Read the input. Call `compile(css, { base: dirname(input) or cwd, loadStylesheet })`. The
-   loader resolves relative ids against `base`, resolves the id `twill` to the bundled
-   `index.css`, and records every loaded path as a full-rebuild path.
+   loader resolves relative ids against `base`, resolves the id `twill` and the ids it imports
+   to the embedded built-in stylesheets (Section 6.3), and records every loaded filesystem path
+   as a full-rebuild path. Embedded resources are never full-rebuild paths.
 2. Assemble sources (Section 13.1) and create the scanner.
 3. `candidates = scanner.scan()`; `css = compiler.build(candidates)`; write (Section 14.5).
 
@@ -1663,7 +1674,7 @@ on_changes(files):
 
 ## 16. Conformance Examples
 
-All examples use the bundled default theme and show the serializer's raw output (before any
+All examples use the built-in default theme and show the serializer's raw output (before any
 minifier). Whitespace follows Section 5.2.
 
 ### 16.1 Basic Document
@@ -1927,7 +1938,7 @@ specification.
 ### 18.1 REQUIRED for Conformance
 
 - CSS parser and serializer per Section 5
-- Import resolution with a loader callback and the bundled `index.css`, `theme.css`,
+- Import resolution with a loader callback and the embedded built-in `index.css`, `theme.css`,
   `preflight.css`, and `utilities.css`
 - `@theme` with all four modes, namespace clearing, ignored sub-namespaces, and prefixing
 - `@source` in all four forms with brace expansion
