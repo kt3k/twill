@@ -1,0 +1,26 @@
+{
+  "name": "@kt3k/twill",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "tasks": {
+    "test": "deno test",
+    "check": "deno fmt --check && deno lint && deno check mod.ts",
+    "ok": "deno task check && deno task test"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1",
+    "@std/path": "jsr:@std/path@^1",
+    "@std/fs": "jsr:@std/fs@^1",
+    "@std/cli": "jsr:@std/cli@^1"
+  },
+  "fmt": {
+    "exclude": ["src/bundled_css.ts"]
+  },
+  "publish": {
+    "include": ["mod.ts", "cli.ts", "src/**/*.ts", "README.md", "LICENSE"],
+    "exclude": ["src/**/*_test.ts"]
+  }
+}
