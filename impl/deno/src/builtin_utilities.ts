@@ -8,6 +8,7 @@ import { type AstNode, decl } from "./ast.ts";
 import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
+import { registerShadowUtilities } from "./shadows.ts";
 import { isMultipleOfQuarter, isPositiveInteger } from "./utils.ts";
 import {
   asColor,
@@ -866,6 +867,12 @@ export function registerBuiltinUtilities(
     );
     fn(root, { themeKeys: ["--radius"], handle: multi(...properties) });
   }
+
+  // ---------------------------------------------------------------------
+  // Shadows and rings
+  // ---------------------------------------------------------------------
+
+  registerShadowUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity
