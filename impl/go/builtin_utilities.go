@@ -618,6 +618,9 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	// Typography, layout, tables, scrolling, and interactivity extensions.
 	RegisterExtraUtilities(u, theme)
 
+	// Masks.
+	RegisterMaskUtilities(u, theme)
+
 	// Effects, transitions, interactivity.
 	fn("opacity", FunctionalUtilityDescription{ThemeKeys: []string{"--opacity"},
 		HandleBareValue: func(v *CandidateValue) (string, bool) { return v.Value + "%", IsMultipleOfQuarter(v.Value) },
