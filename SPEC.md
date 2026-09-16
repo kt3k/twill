@@ -1280,8 +1280,49 @@ keep their order and are joined with single spaces; the shadows are joined with 
   var(--tw-ring-offset-color)`. A color (`--ring-offset-color`, `--color`) gives
   `--tw-ring-offset-color: <color>`.
 
-Implementations MAY provide additional utilities (gradients, masks, transforms, filters, and
-others) using the same helpers and the same variable conventions.
+Transforms:
+
+Let `TRANSFORM` be `var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,)
+var(--tw-skew-y,)`. Utilities that emit `transform: TRANSFORM` first emit the registrations
+(Section 10.4) for `--tw-rotate-x`, `--tw-rotate-y`, `--tw-rotate-z`, `--tw-skew-x`, `--tw-skew-y`
+(no initial value). Utilities that write a `--tw-translate-*` variable first emit the
+registrations for `--tw-translate-x`, `--tw-translate-y`, `--tw-translate-z` (initial `0`);
+utilities that write a `--tw-scale-*` variable first emit the registrations for `--tw-scale-x`,
+`--tw-scale-y`, `--tw-scale-z` (initial `1`). Let `TRANSLATE_2D` be `var(--tw-translate-x)
+var(--tw-translate-y)`, `TRANSLATE_3D` the same followed by ` var(--tw-translate-z)`, `SCALE_2D`
+`var(--tw-scale-x) var(--tw-scale-y)`, and `SCALE_3D` the same followed by ` var(--tw-scale-z)`.
+
+- `transform-none`: `transform: none`. `transform-gpu`: `transform: translateZ(0) TRANSFORM`.
+  `transform-cpu`: `transform: TRANSFORM`. `transform-[...]`: `transform: <value>`.
+  `transform-flat`, `transform-3d`: `transform-style: flat | preserve-3d`.
+- `backface-visible`, `backface-hidden`: `backface-visibility: visible | hidden`.
+- `perspective-*`: `perspective` (`--perspective`); `perspective-none`. `perspective-origin-*`
+  and `origin-*`: `perspective-origin` and `transform-origin` with the static values `center`,
+  `top`, `top-right` (`top right`), `right`, `bottom-right` (`bottom right`), `bottom`,
+  `bottom-left` (`bottom left`), `left`, `top-left` (`top left`), plus arbitrary values.
+- `translate-*`: `spacingUtility` (`--translate`, `--spacing`) with negative and fractions,
+  emitting `--tw-translate-x: <v>`, `--tw-translate-y: <v>`, `translate: TRANSLATE_2D`.
+  `translate-x-*` and `translate-y-*` set only their variable and emit `translate:
+  TRANSLATE_2D`; `translate-z-*` (negative, no fractions) sets `--tw-translate-z` and emits
+  `translate: TRANSLATE_3D`. `translate-full`, `translate-x-full`, `translate-y-full` use
+  `100%` and their negative forms `-100%`. `translate-3d`: registrations plus `translate:
+  TRANSLATE_3D`. `translate-none`: `translate: none`.
+- `scale-<v>`: a named value from `--scale` or a bare non-negative integer as `<n>%`; negative
+  supported; emits `--tw-scale-x`, `--tw-scale-y`, `--tw-scale-z` set to `<v>` and `scale:
+  SCALE_2D`. An arbitrary value emits only `scale: <value>`. `scale-x-*`, `scale-y-*` set one
+  variable and emit `scale: SCALE_2D`; `scale-z-*` emits `scale: SCALE_3D`; these accept
+  arbitrary values through the variable. `scale-3d`: registrations plus `scale: SCALE_3D`.
+  `scale-none`: `scale: none`.
+- `rotate-<v>`: a named value from `--rotate`, a bare non-negative integer as `<n>deg`, or an
+  arbitrary value; negative supported; emits `rotate: <v>`. `rotate-none`: `rotate: none`.
+  `rotate-x-*`, `rotate-y-*`, `rotate-z-*`: the same values, emitting `--tw-rotate-x:
+  rotateX(<v>)` (`rotateY`, `rotateZ`) and `transform: TRANSFORM`.
+- `skew-<v>`: a named value from `--skew`, a bare non-negative integer as `<n>deg`, or an
+  arbitrary value; negative supported; emits `--tw-skew-x: skewX(<v>)`, `--tw-skew-y:
+  skewY(<v>)`, `transform: TRANSFORM`. `skew-x-*` and `skew-y-*` set one variable.
+
+Implementations MAY provide additional utilities (gradients, masks, filters, and others) using
+the same helpers and the same variable conventions.
 
 ## 11. Compilation and Ordering
 
