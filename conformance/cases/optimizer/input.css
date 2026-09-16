@@ -1,0 +1,19 @@
+@import "twill/theme.css";
+@theme { --color-keep: red; --keep-static: 1px; --chain-a: var(--chain-b); --chain-b: 2px; }
+@theme static { --always: 3px; }
+@theme inline { --radius-x: 3px; }
+.a, .b {
+  color: red;
+  &:hover { color: blue; }
+  .c & { color: green; }
+  > .d { color: purple; }
+  @media (x) { color: orange; .e { color: black; } }
+  @supports (y) { @media (z) { & .f { color: white; } } }
+}
+@keyframes k { 50% { opacity: 0; } }
+@layer x {}
+@media (a) {}
+.empty {}
+/*! keep */
+/* drop */
+@twill utilities;

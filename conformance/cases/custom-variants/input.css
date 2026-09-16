@@ -1,0 +1,25 @@
+@import "twill/theme.css";
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant hocus (&:hover, &:focus);
+@custom-variant wide (@media (width >= 100px), @supports (display: grid));
+@custom-variant mixed (&:hover, @media print);
+@custom-variant theme-dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+}
+@custom-variant dark-hover {
+  @variant theme-dark {
+    &:hover {
+      @slot;
+    }
+  }
+}
+@custom-variant animated {
+  @keyframes spin-custom { to { transform: rotate(1turn); } }
+  animation: spin-custom 1s;
+  @slot;
+}
+@variant hocus2 (&:hover, &:focus);
+@variant dark2 { &:where(.dark, .dark *) { @slot; } }
+@twill utilities;

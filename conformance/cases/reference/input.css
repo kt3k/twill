@@ -1,0 +1,2 @@
+@reference "twill";
+.a { @apply flex p-4 hover:bg-red-500 md:rounded-lg; }

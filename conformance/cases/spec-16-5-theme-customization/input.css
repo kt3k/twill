@@ -1,0 +1,8 @@
+@import "twill";
+@theme {
+  --color-*: initial;
+  --color-primary: oklch(0.6 0.2 250);
+  --breakpoint-3xl: 120rem;
+  --font-display: "Inter", sans-serif;
+}
+@custom-variant dark (&:where(.dark, .dark *));

@@ -1,0 +1,9 @@
+tw:flex
+tw:p-4
+tw:hover:underline
+tw:group-hover:flex
+tw:font-bold
+flex
+tw:bg-red-500/50
+tw:[color:red]
+tw:not-hover:flex

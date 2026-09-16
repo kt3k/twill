@@ -1,0 +1,5 @@
+tab-4
+tab-[8]
+content-auto
+hover:content-auto
+md:tab-2
