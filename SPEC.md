@@ -1359,8 +1359,52 @@ counterpart and `backdrop-opacity-*` exists only for backdrops.
   emits the registration for `--tw-drop-shadow-color` (no initial value) and
   `--tw-drop-shadow-color: <color>`; any other arbitrary value is a shadow.
 
-Implementations MAY provide additional utilities (gradients, masks, and others) using the same
-helpers and the same variable conventions.
+Gradients:
+
+Every stop utility (`from-*`, `via-*`, `to-*`) first emits the registrations for
+`--tw-gradient-position` (no initial value), `--tw-gradient-from`, `--tw-gradient-via`,
+`--tw-gradient-to` (syntax `<color>`, initial `#0000`), `--tw-gradient-stops`,
+`--tw-gradient-via-stops` (no initial value), `--tw-gradient-from-position`,
+`--tw-gradient-via-position`, `--tw-gradient-to-position` (syntax `<length-percentage>`, initial
+`0%`, `50%`, `100%`), in that order. Let `STOPS` be `var(--tw-gradient-via-stops,
+var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position),
+var(--tw-gradient-to) var(--tw-gradient-to-position))` and `VIA_STOPS` be
+`var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position),
+var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to)
+var(--tw-gradient-to-position)`.
+
+An interpolation modifier on a gradient shape utility is `in oklab` when absent; a named
+modifier that is one of `srgb`, `srgb-linear`, `display-p3`, `a98-rgb`, `prophoto-rgb`,
+`rec2020`, `lab`, `oklab`, `xyz`, `xyz-d50`, `xyz-d65`, `hsl`, `hwb`, `lch`, `oklch` gives
+`in <modifier>`; one of `longer`, `shorter`, `increasing`, `decreasing` gives `in oklch
+<modifier> hue`; an arbitrary modifier is used verbatim; anything else invalidates the
+candidate.
+
+- `bg-linear-to-{t,tr,r,br,b,bl,l,tl}` (and the alias `bg-gradient-to-*`):
+  `--tw-gradient-position: to <side> <interpolation>` where `<side>` is `top`, `top right`,
+  `right`, `bottom right`, `bottom`, `bottom left`, `left`, `top left`, followed by
+  `background-image: linear-gradient(var(--tw-gradient-stops))`. `bg-linear-<n>`: a bare
+  non-negative integer as `<n>deg` (negative supported) in place of `to <side>`. An arbitrary
+  value that infers `angle` is used the same way; any other arbitrary value emits only
+  `background-image: linear-gradient(<value>)` and rejects a modifier.
+- `bg-radial`: `--tw-gradient-position: <interpolation>` and `background-image:
+  radial-gradient(var(--tw-gradient-stops))`. `bg-radial-[...]`: `--tw-gradient-position:
+  <value>` (no modifier) and the same `background-image`.
+- `bg-conic`: `--tw-gradient-position: <interpolation>` and `background-image:
+  conic-gradient(var(--tw-gradient-stops))`. `bg-conic-<n>`: `from <n>deg <interpolation>`
+  (negative supported). `bg-conic-[...]`: `--tw-gradient-position: <value>` (no modifier).
+- `from-<color>` (`--background-color`, `--color`; arbitrary values inferring `color`, with the
+  color modifier): registrations, `--tw-gradient-from: <color>`, `--tw-gradient-stops: STOPS`.
+  `from-<n>%` and arbitrary values inferring `length` or `percentage` (no modifier):
+  registrations and `--tw-gradient-from-position: <value>`.
+- `via-<color>`: registrations, `--tw-gradient-via: <color>`, `--tw-gradient-via-stops:
+  VIA_STOPS`, `--tw-gradient-stops: var(--tw-gradient-via-stops)`. `via-<n>%`:
+  `--tw-gradient-via-position`.
+- `to-<color>`: registrations, `--tw-gradient-to: <color>`, `--tw-gradient-stops: STOPS`.
+  `to-<n>%`: `--tw-gradient-to-position`.
+
+Implementations MAY provide additional utilities (masks and others) using the same helpers and
+the same variable conventions.
 
 ## 11. Compilation and Ordering
 

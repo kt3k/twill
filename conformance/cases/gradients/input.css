@@ -1,0 +1,5 @@
+@import "twill/theme.css";
+@theme {
+  --background-color-brand: #123456;
+}
+@twill utilities;

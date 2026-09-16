@@ -9,6 +9,7 @@ import type { FunctionalCandidate } from "./candidate.ts";
 import { inferDataType } from "./data_types.ts";
 import type { Theme } from "./theme.ts";
 import { registerFilterUtilities } from "./filters.ts";
+import { registerGradientUtilities } from "./gradients.ts";
 import { registerShadowUtilities } from "./shadows.ts";
 import { registerTransformUtilities } from "./transforms.ts";
 import { isMultipleOfQuarter, isPositiveInteger } from "./utils.ts";
@@ -887,6 +888,12 @@ export function registerBuiltinUtilities(
   // ---------------------------------------------------------------------
 
   registerFilterUtilities(utilities, theme);
+
+  // ---------------------------------------------------------------------
+  // Gradients
+  // ---------------------------------------------------------------------
+
+  registerGradientUtilities(utilities, theme);
 
   // ---------------------------------------------------------------------
   // Effects, transitions, interactivity

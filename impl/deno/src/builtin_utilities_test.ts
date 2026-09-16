@@ -759,6 +759,112 @@ Deno.test("utilities: filters", async () => {
   );
 });
 
+const GRADIENT_REGISTRATIONS = [
+  `@property --tw-gradient-position {\n    syntax: "*";\n    inherits: false;\n  }`,
+  `@property --tw-gradient-from {\n    syntax: "<color>";\n    inherits: false;\n    initial-value: #0000;\n  }`,
+  `@property --tw-gradient-via {\n    syntax: "<color>";\n    inherits: false;\n    initial-value: #0000;\n  }`,
+  `@property --tw-gradient-to {\n    syntax: "<color>";\n    inherits: false;\n    initial-value: #0000;\n  }`,
+  `@property --tw-gradient-stops {\n    syntax: "*";\n    inherits: false;\n  }`,
+  `@property --tw-gradient-via-stops {\n    syntax: "*";\n    inherits: false;\n  }`,
+  `@property --tw-gradient-from-position {\n    syntax: "<length-percentage>";\n    inherits: false;\n    initial-value: 0%;\n  }`,
+  `@property --tw-gradient-via-position {\n    syntax: "<length-percentage>";\n    inherits: false;\n    initial-value: 50%;\n  }`,
+  `@property --tw-gradient-to-position {\n    syntax: "<length-percentage>";\n    inherits: false;\n    initial-value: 100%;\n  }`,
+];
+const GRADIENT_STOPS_DECL =
+  "--tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));";
+
+Deno.test("utilities: gradients", async () => {
+  const ds = await setup();
+  const linear = "background-image: linear-gradient(var(--tw-gradient-stops));";
+  expectDecls(ds, "bg-linear-to-r", [
+    "--tw-gradient-position: to right in oklab;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-linear-to-tl/srgb", [
+    "--tw-gradient-position: to top left in srgb;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-linear-to-r/longer", [
+    "--tw-gradient-position: to right in oklch longer hue;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-linear-45/[in_hsl]", [
+    "--tw-gradient-position: 45deg in hsl;",
+    linear,
+  ]);
+  expectDecls(ds, "-bg-linear-45", [
+    "--tw-gradient-position: calc(45deg * -1) in oklab;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-linear-[30deg]", [
+    "--tw-gradient-position: 30deg in oklab;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-linear-[to_right,red,blue]", [
+    "background-image: linear-gradient(to right,red,blue);",
+  ]);
+  expectDecls(ds, "bg-gradient-to-b", [
+    "--tw-gradient-position: to bottom in oklab;",
+    linear,
+  ]);
+  expectDecls(ds, "bg-radial", [
+    "--tw-gradient-position: in oklab;",
+    "background-image: radial-gradient(var(--tw-gradient-stops));",
+  ]);
+  expectDecls(ds, "bg-radial-[at_center]", [
+    "--tw-gradient-position: at center;",
+    "background-image: radial-gradient(var(--tw-gradient-stops));",
+  ]);
+  expectDecls(ds, "bg-conic-90/hsl", [
+    "--tw-gradient-position: from 90deg in hsl;",
+    "background-image: conic-gradient(var(--tw-gradient-stops));",
+  ]);
+  expectDecls(ds, "from-red-500", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-from: var(--color-red-500);",
+    GRADIENT_STOPS_DECL,
+  ]);
+  expectDecls(ds, "from-red-500/50", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-from: color-mix(in oklab, var(--color-red-500) 50%, transparent);",
+    GRADIENT_STOPS_DECL,
+  ]);
+  expectDecls(ds, "from-10%", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-from-position: 10%;",
+  ]);
+  expectDecls(ds, "via-blue-500", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-via: var(--color-blue-500);",
+    "--tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);",
+    "--tw-gradient-stops: var(--tw-gradient-via-stops);",
+  ]);
+  expectDecls(ds, "to-[2rem]", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-to-position: 2rem;",
+  ]);
+  expectDecls(ds, "to-[#fff]", [
+    ...GRADIENT_REGISTRATIONS,
+    "--tw-gradient-to: #fff;",
+    GRADIENT_STOPS_DECL,
+  ]);
+  expectInvalid(
+    ds,
+    "bg-linear",
+    "bg-linear-to-x",
+    "bg-linear-to-r/nope",
+    "bg-linear-1.5",
+    "bg-gradient-45",
+    "bg-radial-x",
+    "bg-radial-[at_center]/srgb",
+    "bg-conic-x",
+    "from-10",
+    "from-10%/50",
+    "from-nope",
+    "to-nope",
+  );
+});
+
 Deno.test("utilities: effects, transitions, interactivity", async () => {
   const ds = await setup();
   expectDecls(ds, "opacity-[.5]", ["opacity: .5;"]);
