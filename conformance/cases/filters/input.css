@@ -1,0 +1,8 @@
+@import "twill/theme.css";
+@theme {
+  --brightness-dim: 40%;
+  --backdrop-blur-glass: 20px;
+  --drop-shadow-color-glow: #ff0;
+  --hue-rotate-half: 180deg;
+}
+@twill utilities;

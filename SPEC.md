@@ -1321,8 +1321,46 @@ var(--tw-translate-y)`, `TRANSLATE_3D` the same followed by ` var(--tw-translate
   arbitrary value; negative supported; emits `--tw-skew-x: skewX(<v>)`, `--tw-skew-y:
   skewY(<v>)`, `transform: TRANSFORM`. `skew-x-*` and `skew-y-*` set one variable.
 
-Implementations MAY provide additional utilities (gradients, masks, filters, and others) using
-the same helpers and the same variable conventions.
+Filters:
+
+Let `FILTER` be `var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,)
+var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,)`
+and `BACKDROP_FILTER` be `var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,)
+var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,)
+var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,)
+var(--tw-backdrop-sepia,)`. A utility that emits `filter: FILTER` first emits the registrations
+(no initial value) for the nine `--tw-*` variables of `FILTER`, in that order; a utility that
+emits `-webkit-backdrop-filter: BACKDROP_FILTER` followed by `backdrop-filter: BACKDROP_FILTER`
+first emits the registrations for the nine `--tw-backdrop-*` variables. Every utility below has a
+`backdrop-` counterpart that uses the `--tw-backdrop-*` variable, the `--backdrop-<name>`
+namespace before the plain namespace, and the backdrop declarations; `drop-shadow-*` has no
+counterpart and `backdrop-opacity-*` exists only for backdrops.
+
+- `filter-none`: `filter: none`. `filter-[...]`: `filter: <value>`. `filter`: registrations plus
+  `filter: FILTER`. (`backdrop-filter-none`, `backdrop-filter-[...]`, `backdrop-filter` emit both
+  backdrop properties.)
+- `blur-<key>` (`--blur`; the bare form resolves `--blur`): `--tw-blur: blur(<v>)` plus the
+  filter declarations. `blur-none`: `--tw-blur: ` (an empty value) plus the filter declarations.
+- `brightness-<v>`, `contrast-<v>`, `saturate-<v>` (`--brightness`, `--contrast`, `--saturate`):
+  a named value or a bare non-negative integer as `<n>%`; `--tw-<name>: <name>(<v>)` plus the
+  filter declarations.
+- `grayscale`, `invert`, `sepia`: the bare form uses `100%`; otherwise as above (`--grayscale`,
+  `--invert`, `--sepia`), so `grayscale-0` is `grayscale(0%)`.
+- `hue-rotate-<v>` (`--hue-rotate`): a named value or a bare non-negative integer as `<n>deg`;
+  negative supported; `--tw-hue-rotate: hue-rotate(<v>)` plus the filter declarations.
+- `backdrop-opacity-<v>` (`--backdrop-opacity`, `--opacity`): a bare non-negative integer as
+  `<n>%`; `--tw-backdrop-opacity: opacity(<v>)` plus the backdrop declarations.
+- `drop-shadow`, `drop-shadow-<key>`: the raw value from `--drop-shadow` passed through
+  `replaceShadowColors(v, c => var(--tw-drop-shadow-color, c))` (a modifier applies to each `c`
+  as in `shadow-*`), then each comma-separated shadow wrapped as `drop-shadow(<shadow>)` and
+  joined with single spaces; emitted as `--tw-drop-shadow: <value>` plus the filter
+  declarations. `drop-shadow-none`: `--tw-drop-shadow: ` (empty) plus the filter declarations.
+  A named color (`--drop-shadow-color`, `--color`) or an arbitrary value inferring `color`
+  emits the registration for `--tw-drop-shadow-color` (no initial value) and
+  `--tw-drop-shadow-color: <color>`; any other arbitrary value is a shadow.
+
+Implementations MAY provide additional utilities (gradients, masks, and others) using the same
+helpers and the same variable conventions.
 
 ## 11. Compilation and Ordering
 
