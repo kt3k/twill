@@ -19,3 +19,4 @@ export {
   type StylesheetLoader,
 } from "./src/builtin.ts";
 export type { SourceEntry, SourceRoot } from "./src/directives.ts";
+export * from "./src/candidate.ts";
