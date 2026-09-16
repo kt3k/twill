@@ -1,0 +1,6 @@
+/*! license */
+@import url(x.css);
+@import "https://x/y.css";
+@charset "utf-8";
+@theme { --a: 1; }
+.a { color: var(--a); }

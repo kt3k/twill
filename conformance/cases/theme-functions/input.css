@@ -1,0 +1,18 @@
+@import "twill/theme.css";
+.a {
+  padding: --spacing(4);
+  margin: --spacing(0) --spacing(1);
+  color: --alpha(var(--color-red-500) / 50%);
+  width: --theme(--container-md);
+  height: --theme(--container-md inline);
+  gap: --theme(--nope, 1px, 2px);
+  font: theme(--text-lg);
+  border-color: --theme(--color-red-500/0.5);
+  background: --theme(--color-red-500, red);
+}
+@media (width >= --theme(--breakpoint-md)) {
+  .b { color: red; }
+}
+@theme { --a: var(--b); --b: 1px; --c: initial; --d: 1px; }
+.x { color: --theme(--a, red); background: --theme(--a inline, red); width: --theme(--d, initial); height: --theme(--c, 2px); }
+@twill utilities;

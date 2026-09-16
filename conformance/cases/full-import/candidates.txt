@@ -1,0 +1,6 @@
+flex
+p-4
+hover:underline
+font-bold
+animate-spin
+shadow-md
