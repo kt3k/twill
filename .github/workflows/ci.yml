@@ -20,3 +20,17 @@ jobs:
       - run: deno lint
       - run: deno check mod.ts cli.ts
       - run: deno task test
+
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: impl/go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test ./...
