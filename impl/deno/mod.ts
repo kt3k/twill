@@ -20,3 +20,28 @@ export {
 } from "./src/builtin.ts";
 export type { SourceEntry, SourceRoot } from "./src/directives.ts";
 export * from "./src/candidate.ts";
+export {
+  applyVariant,
+  Compounds,
+  compoundsForSelectors,
+  staticVariant,
+  type VariantApply,
+  type VariantDefinition,
+  type VariantRule,
+  Variants,
+} from "./src/variants.ts";
+export {
+  asColor,
+  colorUtility,
+  type CompileResult,
+  functionalUtility,
+  type FunctionalUtilityDescription,
+  propertyRegistration,
+  resolveThemeColor,
+  spacingUtility,
+  staticUtility,
+  Utilities,
+  type UtilityDefinition,
+} from "./src/utilities.ts";
+export { type DataType, inferDataType } from "./src/data_types.ts";
+export { buildDesignSystem, DesignSystem } from "./src/design_system.ts";

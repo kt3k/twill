@@ -32,7 +32,8 @@
       "LICENSE"
     ],
     "exclude": [
-      "src/**/*_test.ts"
+      "src/**/*_test.ts",
+      "src/testing.ts"
     ]
   }
 }
