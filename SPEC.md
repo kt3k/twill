@@ -394,8 +394,7 @@ every parameter is consumed the `@media` wrapper is removed and its children are
 ### 6.3 Built-in Stylesheets
 
 An implementation MUST provide four built-in stylesheets and MUST resolve the import id `twill` to
-the entry stylesheet among them. The built-in stylesheets are logical resources identified by
-name, not files on disk:
+the entry stylesheet among them:
 
 - `index.css`: `@layer theme, base, components, utilities;` followed by `@import './theme.css'
   layer(theme);`, `@import './preflight.css' layer(base);`, and `@import './utilities.css'
@@ -407,14 +406,25 @@ name, not files on disk:
 - `preflight.css`: base element resets.
 - `utilities.css`: the single statement `@twill utilities;`.
 
-Implementations SHOULD embed the text of these stylesheets in the compiled program (for example
-as string constants or compile-time included resources) so that the compiler is self-contained.
-Publishing them as separate CSS files is not required. The loader (Section 6.2) resolves the id
-`twill` to the embedded entry stylesheet, and the relative ids `./theme.css`, `./preflight.css`,
-and `./utilities.css` requested from inside that stylesheet resolve to the corresponding embedded
-resources rather than to the filesystem. The `base` returned for an embedded resource is
-implementation-defined but MUST be distinct from any user directory, and a relative import that
-originates from user CSS MUST NOT resolve to an embedded resource.
+How the built-in stylesheets are stored is implementation-defined. Two storage models are
+acceptable, and an implementation MAY choose either:
+
+- `Files on disk`: the four stylesheets ship as CSS files in a directory that the loader
+  (Section 6.2) knows about. The id `twill` resolves to `index.css` in that directory, and the
+  relative ids `./theme.css`, `./preflight.css`, and `./utilities.css` resolve against it through
+  the ordinary relative-path rule. The `base` returned for each stylesheet is its directory.
+- `Embedded resources`: the text of the four stylesheets is embedded in the compiled program (for
+  example as string constants or compile-time included resources), so nothing needs to be
+  published as a separate CSS file. The built-in stylesheets are then logical resources identified
+  by name. The id `twill` resolves to the embedded entry stylesheet, and the relative ids
+  `./theme.css`, `./preflight.css`, and `./utilities.css` requested from inside that stylesheet
+  resolve to the corresponding embedded resources rather than to the filesystem. The `base`
+  returned for an embedded resource is implementation-defined but MUST be distinct from any user
+  directory, and a relative import that originates from user CSS MUST NOT resolve to an embedded
+  resource.
+
+Under either model the observable behavior of `compile` MUST be the same: the same input CSS and
+candidates produce the same output.
 
 The default theme values that this specification's examples depend on are:
 
@@ -1515,8 +1525,9 @@ Behavior:
 
 1. Read the input. Call `compile(css, { base: dirname(input) or cwd, loadStylesheet })`. The
    loader resolves relative ids against `base`, resolves the id `twill` and the ids it imports
-   to the embedded built-in stylesheets (Section 6.3), and records every loaded filesystem path
-   as a full-rebuild path. Embedded resources are never full-rebuild paths.
+   to the built-in stylesheets (Section 6.3), and records every loaded filesystem path as a
+   full-rebuild path. Built-in stylesheets stored on disk MAY be recorded as full-rebuild paths;
+   embedded resources are never full-rebuild paths.
 2. Assemble sources (Section 13.1) and create the scanner.
 3. `candidates = scanner.scan()`; `css = compiler.build(candidates)`; write (Section 14.5).
 
@@ -1938,8 +1949,8 @@ specification.
 ### 18.1 REQUIRED for Conformance
 
 - CSS parser and serializer per Section 5
-- Import resolution with a loader callback and the embedded built-in `index.css`, `theme.css`,
-  `preflight.css`, and `utilities.css`
+- Import resolution with a loader callback and the built-in `index.css`, `theme.css`,
+  `preflight.css`, and `utilities.css` (stored on disk or embedded, per Section 6.3)
 - `@theme` with all four modes, namespace clearing, ignored sub-namespaces, and prefixing
 - `@source` in all four forms with brace expansion
 - `@custom-variant` in both forms with dependency ordering
