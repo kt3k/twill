@@ -502,8 +502,9 @@ func (r *runner) watch(ctx context.Context) {
 		if err := r.handle(changed); err != nil {
 			r.report(err)
 		}
-		// A full rebuild replaces the watched set.
-		previous = r.snapshot()
+		// The next snapshot is compared against `current`, so files written
+		// while the batch was handled (and files added to the watched set by
+		// a full rebuild) are picked up on the next tick.
 	}
 }
 
