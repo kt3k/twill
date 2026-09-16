@@ -6,4 +6,5 @@ let () =
   Test_candidate.run ();
   Test_builtin_variants.run ();
   Test_builtin_utilities.run ();
+  Test_compile.run ();
   Harness.finish ()

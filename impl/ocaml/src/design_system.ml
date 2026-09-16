@@ -14,11 +14,20 @@ type t = {
   variant_cache : (string, variant) Hashtbl.t;
   variant_missing : (string, unit) Hashtbl.t;
   mutable variant_order : (string, int) Hashtbl.t option;
+  (* Compiled rules per candidate interpretation and compile flags. *)
+  compile_cache : (candidate * int, compiled_rule list) Hashtbl.t;
 }
+
+(* The sort key of a node list (SPEC §11.3). *)
+and property_sort = { order : int list; count : int }
+
+(* A compiled rule with its property sort key. *)
+and compiled_rule = { node : Ast.rule; property_sort : property_sort }
 
 let create theme =
   { theme; utilities = Utilities.create (); variants = Variants.create (); invalid_candidates = Hashtbl.create 64; important = false;
-    candidate_cache = Hashtbl.create 1024; variant_cache = Hashtbl.create 64; variant_missing = Hashtbl.create 64; variant_order = None }
+    candidate_cache = Hashtbl.create 1024; variant_cache = Hashtbl.create 64; variant_missing = Hashtbl.create 64; variant_order = None;
+    compile_cache = Hashtbl.create 1024 }
 
 (* Parses a variant, memoized so equal inputs share one value. *)
 let rec parse_variant ds raw =
@@ -83,5 +92,7 @@ let variant_order ds =
 
 let order_of ds (v : variant) = match Hashtbl.find_opt (variant_order ds) v.vraw with Some i -> i | None -> 0
 
-(* Drops memoized candidates. *)
-let clear_candidate_cache ds = Hashtbl.reset ds.candidate_cache
+(* Drops memoized candidates and compiled results. *)
+let clear_candidate_cache ds =
+  Hashtbl.reset ds.candidate_cache;
+  Hashtbl.reset ds.compile_cache
