@@ -35,6 +35,17 @@ jobs:
       - run: go vet ./...
       - run: go test ./...
 
+  ocaml:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: impl/ocaml
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ocaml ocaml-dune ocaml-findlib
+      - run: dune build
+      - run: dune test
+
   conformance:
     runs-on: ubuntu-latest
     steps:
