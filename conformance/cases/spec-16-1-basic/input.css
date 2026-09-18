@@ -1,7 +1,0 @@
-@theme {
-  --color-black: #000;
-  --breakpoint-md: 768px;
-}
-@layer utilities {
-  @twill utilities;
-}

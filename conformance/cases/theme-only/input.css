@@ -1,2 +1,0 @@
-@theme { --a: 1; --b: var(--a); --c: calc(var(--b) * 2); }
-.a { color: var(--c); }

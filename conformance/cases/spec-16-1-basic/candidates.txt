@@ -1,4 +1,0 @@
-dark:bg-black
-hover:underline
-md:grid
-flex

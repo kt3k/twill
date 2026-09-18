@@ -1,6 +1,0 @@
-bg-primary
-3xl:flex
-font-display
-bg-red-500
-dark:flex
-dark:bg-primary/50

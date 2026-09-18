@@ -1,7 +1,0 @@
-@import "twill/theme.css";
-@source inline("p-{1,2}");
-@source inline("{hover:,}bg-red-{100,200}");
-@source not inline("flex");
-@source "./src";
-@source not "./dist";
-@twill utilities;

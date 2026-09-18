@@ -1,9 +1,0 @@
-bg-keep
-[width:var(--chain-a)]
---color-blue-500
-animate-spin
-font-bold
-font-thin
-leading-6
-rounded-x
-rounded-lg

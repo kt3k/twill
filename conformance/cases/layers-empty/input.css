@@ -1,3 +1,0 @@
-@layer theme, base;
-@import "twill/theme.css" layer(theme);
-@twill utilities;

@@ -1,8 +1,0 @@
-@import "twill/theme.css";
-@theme {
-  --rotate-quarter: 90deg;
-  --scale-huge: 300%;
-  --skew-slight: 2deg;
-  --translate-far: 10rem;
-}
-@twill utilities;

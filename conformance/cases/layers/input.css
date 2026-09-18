@@ -1,4 +1,0 @@
-@layer theme, base, components, utilities;
-@import "twill/theme.css" layer(theme);
-@import "twill/preflight.css" layer(base);
-@import "twill/utilities.css" layer(utilities);

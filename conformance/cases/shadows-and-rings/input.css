@@ -1,8 +1,0 @@
-@import "twill/theme.css";
-@theme {
-  --ring-width-thick: 4px;
-  --ring-offset-width-wide: 6px;
-  --box-shadow-color-glow: #ff0;
-  --inset-shadow-deep: inset 0 4px 8px rgb(0 0 0 / 0.2), inset 0 1px 2px rgb(0 0 0 / 0.1);
-}
-@twill utilities;
