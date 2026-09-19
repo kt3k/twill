@@ -6,6 +6,10 @@ let border_style_property = "@property --tw-border-style {\n    syntax: \"*\";\n
 let font_weight_property = "@property --tw-font-weight {\n    syntax: \"*\";\n    inherits: false;\n  }"
 let leading_property = "@property --tw-leading {\n    syntax: \"*\";\n    inherits: false;\n  }"
 let tracking_property = "@property --tw-tracking {\n    syntax: \"*\";\n    inherits: false;\n  }"
+let duration_property = "@property --tw-duration {\n    syntax: \"*\";\n    inherits: false;\n  }"
+let ease_property = "@property --tw-ease {\n    syntax: \"*\";\n    inherits: false;\n  }"
+let transition_timing = "transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));"
+let transition_duration = "transition-duration: var(--tw-duration, var(--default-transition-duration));"
 
 let reg ?(syntax = "*") name initial =
   let out = "@property " ^ name ^ " {\n    syntax: \"" ^ syntax ^ "\";\n    inherits: false;\n" in
@@ -444,6 +448,14 @@ let extras () =
   d "content-none" [ reg "--tw-content" "\"\""; "--tw-content: none;"; "content: none;" ];
   d "bg-blend-multiply" [ "background-blend-mode: multiply;" ];
   d "mix-blend-plus-lighter" [ "mix-blend-mode: plus-lighter;" ];
+  d "@container" [ "container-type: inline-size;" ];
+  d "@container-normal" [ "container-type: normal;" ];
+  d "@container-size" [ "container-type: size;" ];
+  d "@container-[cyclic]" [ "container-type: cyclic;" ];
+  d "@container/card-header" [ "container-type: inline-size;"; "container-name: card-header;" ];
+  d "@container-size/card" [ "container-type: size;"; "container-name: card;" ];
+  d "@container/[card]" [ "container-type: inline-size;"; "container-name: card;" ];
+  expect_invalid ds [ "@container-nope" ];
   d "container"
     [ "width: 100%;"; "@media (width >= 40rem) {\n    max-width: 40rem;\n  }"; "@media (width >= 48rem) {\n    max-width: 48rem;\n  }";
       "@media (width >= 64rem) {\n    max-width: 64rem;\n  }"; "@media (width >= 80rem) {\n    max-width: 80rem;\n  }";
@@ -546,11 +558,18 @@ let effects () =
   expect_invalid ds [ "opacity-33.3"; "opacity-50/50" ];
   includes "transition" (compile_raw ds "transition")
     "transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;";
-  d "transition-opacity"
-    [ "transition-property: opacity;"; "transition-timing-function: var(--default-transition-timing-function);";
-      "transition-duration: var(--default-transition-duration);" ];
-  d "duration-300" [ "transition-duration: 300ms;" ];
-  d "ease-in-out" [ "transition-timing-function: var(--ease-in-out);" ];
+  d "transition-opacity" [ "transition-property: opacity;"; transition_timing; transition_duration ];
+  d "transition-none" [ "transition-property: none;" ];
+  d "transition-[color,box-shadow]" [ "transition-property: color,box-shadow;"; transition_timing; transition_duration ];
+  d "transition-[margin,opacity]" [ "transition-property: margin,opacity;"; transition_timing; transition_duration ];
+  d "duration-300" [ duration_property; "--tw-duration: 300ms;"; "transition-duration: 300ms;" ];
+  d "duration-[1s]" [ duration_property; "--tw-duration: 1s;"; "transition-duration: 1s;" ];
+  d "duration-initial" [ "--tw-duration: initial;" ];
+  d "delay-[1s]" [ "transition-delay: 1s;" ];
+  d "ease-in-out" [ ease_property; "--tw-ease: var(--ease-in-out);"; "transition-timing-function: var(--ease-in-out);" ];
+  d "ease-linear" [ ease_property; "--tw-ease: linear;"; "transition-timing-function: linear;" ];
+  d "ease-initial" [ "--tw-ease: initial;" ];
+  expect_invalid ds [ "duration"; "transition-nope"; "transition-all/2" ];
   d "animate-spin" [ "animation: var(--animate-spin);" ];
   d "cursor-pointer" [ "cursor: pointer;" ];
   d "select-none" [ "-webkit-user-select: none;"; "user-select: none;" ];

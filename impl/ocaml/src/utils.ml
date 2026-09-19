@@ -318,7 +318,12 @@ let rec decode_value_nodes nodes =
             List.iter (function Value.Word w -> w.w <- replace_all w.w "\\_" "_" | _ -> ()) head;
             decode_value_nodes tail
           end
-          else decode_value_nodes f.fnodes)
+          else begin
+            (* A function name is decoded like a word, so an arbitrary variant
+               such as [&_svg:not(.x)] yields the selector [& svg:not(.x)]. *)
+            f.fname <- replace_underscores name;
+            decode_value_nodes f.fnodes
+          end)
     nodes
 
 let is_ident_byte c = is_alnum c || c = '_' || c = '-'
@@ -416,7 +421,10 @@ let add_whitespace_around_math_operators input =
     Buffer.contents b
   end
 
-(* Decodes underscores and spaces math operators. *)
+(* Decodes underscores and spaces math operators. Every unescaped [_] becomes a
+   space except inside url(...) (and *_url(...)) and in the first argument of
+   var(...) and theme(...); nothing else suppresses the conversion, so
+   [&_svg:not(.x)] becomes [& svg:not(.x)]. *)
 let decode_arbitrary_value input =
   if not (String.contains input '(') then replace_underscores input
   else begin

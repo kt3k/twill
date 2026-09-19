@@ -24,6 +24,19 @@ function expectInvalid(ds: DesignSystem, ...raws: string[]): void {
   for (const raw of raws) assertEquals(compileRaw(ds, raw), "", raw);
 }
 
+const TRANSITION_TIMING =
+  "transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));";
+const TRANSITION_DURATION =
+  "transition-duration: var(--tw-duration, var(--default-transition-duration));";
+const DURATION_PROPERTY = `@property --tw-duration {
+    syntax: "*";
+    inherits: false;
+  }`;
+const EASE_PROPERTY = `@property --tw-ease {
+    syntax: "*";
+    inherits: false;
+  }`;
+
 const BORDER_STYLE_PROPERTY = `@property --tw-border-style {
     syntax: "*";
     inherits: false;
@@ -1024,6 +1037,23 @@ Deno.test("utilities: typography, layout, table, scrolling extensions", async ()
   ]);
   expectDecls(ds, "bg-blend-multiply", ["background-blend-mode: multiply;"]);
   expectDecls(ds, "mix-blend-plus-lighter", ["mix-blend-mode: plus-lighter;"]);
+  expectDecls(ds, "@container", ["container-type: inline-size;"]);
+  expectDecls(ds, "@container-normal", ["container-type: normal;"]);
+  expectDecls(ds, "@container-size", ["container-type: size;"]);
+  expectDecls(ds, "@container-[cyclic]", ["container-type: cyclic;"]);
+  expectDecls(ds, "@container/card-header", [
+    "container-type: inline-size;",
+    "container-name: card-header;",
+  ]);
+  expectDecls(ds, "@container-size/card", [
+    "container-type: size;",
+    "container-name: card;",
+  ]);
+  expectDecls(ds, "@container/[card]", [
+    "container-type: inline-size;",
+    "container-name: card;",
+  ]);
+  expectInvalid(ds, "@container-nope");
   expectDecls(ds, "container", [
     "width: 100%;",
     "@media (width >= 40rem) {\n    max-width: 40rem;\n  }",
@@ -1228,15 +1258,43 @@ Deno.test("utilities: effects, transitions, interactivity", async () => {
   expectDecls(ds, "transition-none", ["transition-property: none;"]);
   expectDecls(ds, "transition-opacity", [
     "transition-property: opacity;",
-    "transition-timing-function: var(--default-transition-timing-function);",
-    "transition-duration: var(--default-transition-duration);",
+    TRANSITION_TIMING,
+    TRANSITION_DURATION,
   ]);
-  expectDecls(ds, "duration-300", ["transition-duration: 300ms;"]);
+  expectDecls(ds, "transition-[color,box-shadow]", [
+    "transition-property: color,box-shadow;",
+    TRANSITION_TIMING,
+    TRANSITION_DURATION,
+  ]);
+  expectDecls(ds, "transition-[margin,opacity]", [
+    "transition-property: margin,opacity;",
+    TRANSITION_TIMING,
+    TRANSITION_DURATION,
+  ]);
+  expectDecls(ds, "duration-300", [
+    DURATION_PROPERTY,
+    "--tw-duration: 300ms;",
+    "transition-duration: 300ms;",
+  ]);
+  expectDecls(ds, "duration-[1s]", [
+    DURATION_PROPERTY,
+    "--tw-duration: 1s;",
+    "transition-duration: 1s;",
+  ]);
+  expectDecls(ds, "duration-initial", ["--tw-duration: initial;"]);
   expectDecls(ds, "delay-[1s]", ["transition-delay: 1s;"]);
   expectDecls(ds, "ease-in-out", [
+    EASE_PROPERTY,
+    "--tw-ease: var(--ease-in-out);",
     "transition-timing-function: var(--ease-in-out);",
   ]);
-  expectDecls(ds, "ease-linear", ["transition-timing-function: linear;"]);
+  expectDecls(ds, "ease-linear", [
+    EASE_PROPERTY,
+    "--tw-ease: linear;",
+    "transition-timing-function: linear;",
+  ]);
+  expectDecls(ds, "ease-initial", ["--tw-ease: initial;"]);
+  expectInvalid(ds, "duration", "transition-nope", "transition-all/2");
   expectDecls(ds, "animate-spin", ["animation: var(--animate-spin);"]);
   expectDecls(ds, "animate-none", ["animation: none;"]);
   expectDecls(ds, "cursor-pointer", ["cursor: pointer;"]);

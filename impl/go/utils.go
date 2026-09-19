@@ -329,7 +329,10 @@ var mathFunctions = map[string]bool{
 // IsMathFunction reports whether name is a CSS math function.
 func IsMathFunction(name string) bool { return mathFunctions[name] }
 
-// DecodeArbitraryValue decodes underscores and spaces math operators.
+// DecodeArbitraryValue decodes underscores and spaces math operators. Every
+// unescaped `_` becomes a space except inside url(...) (and *_url(...)) and in
+// the first argument of var(...) and theme(...); nothing else suppresses the
+// conversion, so `&_svg:not(.x)` becomes `& svg:not(.x)`.
 func DecodeArbitraryValue(input string) string {
 	if !strings.Contains(input, "(") {
 		return replaceUnderscores(input)
@@ -384,6 +387,9 @@ func decodeValueNodes(nodes []ValueNode) {
 				decodeValueNodes(n.Nodes[firstComma:])
 				continue
 			}
+			// A function name is decoded like a word, so an arbitrary variant
+			// such as `[&_svg:not(.x)]` yields the selector `& svg:not(.x)`.
+			n.Name = replaceUnderscores(name)
 			decodeValueNodes(n.Nodes)
 		}
 	}

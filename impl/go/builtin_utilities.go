@@ -625,9 +625,17 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 	fn("opacity", FunctionalUtilityDescription{ThemeKeys: []string{"--opacity"},
 		HandleBareValue: func(v *CandidateValue) (string, bool) { return v.Value + "%", IsMultipleOfQuarter(v.Value) },
 		Handle:          handle(single("opacity"))})
+	defaultTiming, ok := theme.Resolve(nil, []string{"--default-transition-timing-function"}, 0)
+	if !ok {
+		defaultTiming = "ease"
+	}
+	defaultDuration, ok := theme.Resolve(nil, []string{"--default-transition-duration"}, 0)
+	if !ok {
+		defaultDuration = "0s"
+	}
 	transitionTail := [][2]string{
-		{"transition-timing-function", "var(--default-transition-timing-function)"},
-		{"transition-duration", "var(--default-transition-duration)"},
+		{"transition-timing-function", "var(--tw-ease, " + defaultTiming + ")"},
+		{"transition-duration", "var(--tw-duration, " + defaultDuration + ")"},
 	}
 	withTail := func(property string) []Node {
 		return []Node{Decl("transition-property", property), Decl(transitionTail[0][0], transitionTail[0][1]), Decl(transitionTail[1][0], transitionTail[1][1])}
@@ -638,22 +646,40 @@ func RegisterBuiltinUtilities(u *Utilities, theme *Theme) {
 		"translate", "scale", "rotate", "filter", "-webkit-backdrop-filter", "backdrop-filter", "display",
 		"content-visibility", "overlay", "pointer-events",
 	}, ", ")
-	StaticUtilityFn(u, "transition", func() []Node { return withTail(transitionProperties) })
-	stat("transition-none", [2]string{"transition-property", "none"})
-	StaticUtilityFn(u, "transition-all", func() []Node { return withTail("all") })
-	StaticUtilityFn(u, "transition-colors", func() []Node {
-		return withTail("color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to")
-	})
-	StaticUtilityFn(u, "transition-opacity", func() []Node { return withTail("opacity") })
-	StaticUtilityFn(u, "transition-shadow", func() []Node { return withTail("box-shadow") })
-	StaticUtilityFn(u, "transition-transform", func() []Node { return withTail("transform, translate, scale, rotate") })
+	fn("transition", FunctionalUtilityDescription{
+		ThemeKeys:    []string{"--transition-property"},
+		DefaultValue: strPtr(transitionProperties),
+		StaticValues: map[string][]Node{
+			"none":      {Decl("transition-property", "none")},
+			"all":       withTail("all"),
+			"colors":    withTail("color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to"),
+			"opacity":   withTail("opacity"),
+			"shadow":    withTail("box-shadow"),
+			"transform": withTail("transform, translate, scale, rotate"),
+		},
+		Handle: handle(withTail)})
 	stat("transition-discrete", [2]string{"transition-behavior", "allow-discrete"})
 	stat("transition-normal", [2]string{"transition-behavior", "normal"})
-	fn("duration", FunctionalUtilityDescription{ThemeKeys: []string{"--transition-duration"}, HandleBareValue: bareSuffix("ms"), Handle: handle(single("transition-duration"))})
+	durationHandle := func(value string) []Node {
+		return []Node{Property("--tw-duration", nil), Decl("--tw-duration", value), Decl("transition-duration", value)}
+	}
+	fn("duration", FunctionalUtilityDescription{
+		ThemeKeys:       []string{"--transition-duration"},
+		NoDefault:       true,
+		StaticValues:    map[string][]Node{"initial": {Decl("--tw-duration", "initial")}},
+		HandleBareValue: bareSuffix("ms"),
+		Handle:          handle(durationHandle)})
 	fn("delay", FunctionalUtilityDescription{ThemeKeys: []string{"--transition-delay"}, HandleBareValue: bareSuffix("ms"), Handle: handle(single("transition-delay"))})
-	stat("ease-linear", [2]string{"transition-timing-function", "linear"})
-	stat("ease-initial", [2]string{"transition-timing-function", "initial"})
-	fn("ease", FunctionalUtilityDescription{ThemeKeys: []string{"--ease"}, Handle: handle(single("transition-timing-function"))})
+	easeHandle := func(value string) []Node {
+		return []Node{Property("--tw-ease", nil), Decl("--tw-ease", value), Decl("transition-timing-function", value)}
+	}
+	fn("ease", FunctionalUtilityDescription{
+		ThemeKeys: []string{"--ease"},
+		StaticValues: map[string][]Node{
+			"linear":  easeHandle("linear"),
+			"initial": {Decl("--tw-ease", "initial")},
+		},
+		Handle: handle(easeHandle)})
 	stat("animate-none", [2]string{"animation", "none"})
 	fn("animate", FunctionalUtilityDescription{ThemeKeys: []string{"--animate"}, Handle: handle(single("animation"))})
 
