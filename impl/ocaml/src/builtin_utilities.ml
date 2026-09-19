@@ -448,9 +448,14 @@ let register u theme =
     (describe ~theme_keys:[ "--opacity" ]
        ~handle_bare_value:(fun (v : candidate_value) -> if is_multiple_of_quarter v.value then Some (v.value ^ "%") else None)
        (handle (single "opacity")));
+  let default_timing =
+    match Theme.resolve theme None [ "--default-transition-timing-function" ] 0 with Some v -> v | None -> "ease"
+  in
+  let default_duration = match Theme.resolve theme None [ "--default-transition-duration" ] 0 with Some v -> v | None -> "0s" in
   let with_tail property =
-    [ decl "transition-property" property; decl "transition-timing-function" "var(--default-transition-timing-function)";
-      decl "transition-duration" "var(--default-transition-duration)" ]
+    [ decl "transition-property" property;
+      decl "transition-timing-function" ("var(--tw-ease, " ^ default_timing ^ ")");
+      decl "transition-duration" ("var(--tw-duration, " ^ default_duration ^ ")") ]
   in
   let transition_properties =
     String.concat ", "
@@ -458,22 +463,32 @@ let register u theme =
         "--tw-gradient-via"; "--tw-gradient-to"; "opacity"; "box-shadow"; "transform"; "translate"; "scale"; "rotate"; "filter";
         "-webkit-backdrop-filter"; "backdrop-filter"; "display"; "content-visibility"; "overlay"; "pointer-events" ]
   in
-  stat_fn "transition" (fun () -> with_tail transition_properties);
-  stat "transition-none" [ ("transition-property", "none") ];
-  stat_fn "transition-all" (fun () -> with_tail "all");
-  stat_fn "transition-colors" (fun () ->
-      with_tail
-        "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to");
-  stat_fn "transition-opacity" (fun () -> with_tail "opacity");
-  stat_fn "transition-shadow" (fun () -> with_tail "box-shadow");
-  stat_fn "transition-transform" (fun () -> with_tail "transform, translate, scale, rotate");
+  fn "transition"
+    (describe ~theme_keys:[ "--transition-property" ] ~default_value:transition_properties
+       ~static_values:
+         [ ("none", [ decl "transition-property" "none" ]);
+           ("all", with_tail "all");
+           ( "colors",
+             with_tail
+               "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to"
+           );
+           ("opacity", with_tail "opacity");
+           ("shadow", with_tail "box-shadow");
+           ("transform", with_tail "transform, translate, scale, rotate") ]
+       (handle with_tail));
   stat "transition-discrete" [ ("transition-behavior", "allow-discrete") ];
   stat "transition-normal" [ ("transition-behavior", "normal") ];
-  fn "duration" (describe ~theme_keys:[ "--transition-duration" ] ~handle_bare_value:(bare_suffix "ms") (handle (single "transition-duration")));
+  let duration_handle value = [ property "--tw-duration" None; decl "--tw-duration" value; decl "transition-duration" value ] in
+  fn "duration"
+    (describe ~theme_keys:[ "--transition-duration" ] ~no_default:true
+       ~static_values:[ ("initial", [ decl "--tw-duration" "initial" ]) ]
+       ~handle_bare_value:(bare_suffix "ms") (handle duration_handle));
   fn "delay" (describe ~theme_keys:[ "--transition-delay" ] ~handle_bare_value:(bare_suffix "ms") (handle (single "transition-delay")));
-  stat "ease-linear" [ ("transition-timing-function", "linear") ];
-  stat "ease-initial" [ ("transition-timing-function", "initial") ];
-  fn "ease" (describe ~theme_keys:[ "--ease" ] (handle (single "transition-timing-function")));
+  let ease_handle value = [ property "--tw-ease" None; decl "--tw-ease" value; decl "transition-timing-function" value ] in
+  fn "ease"
+    (describe ~theme_keys:[ "--ease" ]
+       ~static_values:[ ("linear", ease_handle "linear"); ("initial", [ decl "--tw-ease" "initial" ]) ]
+       (handle ease_handle));
   stat "animate-none" [ ("animation", "none") ];
   fn "animate" (describe ~theme_keys:[ "--animate" ] (handle (single "animation")));
   List.iter

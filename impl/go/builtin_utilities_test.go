@@ -9,6 +9,10 @@ const borderStyleProperty = "@property --tw-border-style {\n    syntax: \"*\";\n
 const fontWeightProperty = "@property --tw-font-weight {\n    syntax: \"*\";\n    inherits: false;\n  }"
 const leadingProperty = "@property --tw-leading {\n    syntax: \"*\";\n    inherits: false;\n  }"
 const trackingProperty = "@property --tw-tracking {\n    syntax: \"*\";\n    inherits: false;\n  }"
+const durationProperty = "@property --tw-duration {\n    syntax: \"*\";\n    inherits: false;\n  }"
+const easeProperty = "@property --tw-ease {\n    syntax: \"*\";\n    inherits: false;\n  }"
+const transitionTiming = "transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));"
+const transitionDuration = "transition-duration: var(--tw-duration, var(--default-transition-duration));"
 
 func expectDecls(t *testing.T, ds *DesignSystem, raw string, declarations ...string) {
 	t.Helper()
@@ -445,6 +449,14 @@ func TestUtilitiesExtras(t *testing.T) {
 	expectDecls(t, ds, "content-none", reg("--tw-content", `""`), "--tw-content: none;", "content: none;")
 	expectDecls(t, ds, "bg-blend-multiply", "background-blend-mode: multiply;")
 	expectDecls(t, ds, "mix-blend-plus-lighter", "mix-blend-mode: plus-lighter;")
+	expectDecls(t, ds, "@container", "container-type: inline-size;")
+	expectDecls(t, ds, "@container-normal", "container-type: normal;")
+	expectDecls(t, ds, "@container-size", "container-type: size;")
+	expectDecls(t, ds, "@container-[cyclic]", "container-type: cyclic;")
+	expectDecls(t, ds, "@container/card-header", "container-type: inline-size;", "container-name: card-header;")
+	expectDecls(t, ds, "@container-size/card", "container-type: size;", "container-name: card;")
+	expectDecls(t, ds, "@container/[card]", "container-type: inline-size;", "container-name: card;")
+	expectInvalid(t, ds, "@container-nope")
 	expectDecls(t, ds, "container", "width: 100%;",
 		"@media (width >= 40rem) {\n    max-width: 40rem;\n  }", "@media (width >= 48rem) {\n    max-width: 48rem;\n  }",
 		"@media (width >= 64rem) {\n    max-width: 64rem;\n  }", "@media (width >= 80rem) {\n    max-width: 80rem;\n  }",
@@ -534,9 +546,18 @@ func TestUtilitiesEffects(t *testing.T) {
 	if !strings.Contains(compileRaw(ds, "transition"), "transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;") {
 		t.Fatal("transition")
 	}
-	expectDecls(t, ds, "transition-opacity", "transition-property: opacity;", "transition-timing-function: var(--default-transition-timing-function);", "transition-duration: var(--default-transition-duration);")
-	expectDecls(t, ds, "duration-300", "transition-duration: 300ms;")
-	expectDecls(t, ds, "ease-in-out", "transition-timing-function: var(--ease-in-out);")
+	expectDecls(t, ds, "transition-opacity", "transition-property: opacity;", transitionTiming, transitionDuration)
+	expectDecls(t, ds, "transition-none", "transition-property: none;")
+	expectDecls(t, ds, "transition-[color,box-shadow]", "transition-property: color,box-shadow;", transitionTiming, transitionDuration)
+	expectDecls(t, ds, "transition-[margin,opacity]", "transition-property: margin,opacity;", transitionTiming, transitionDuration)
+	expectDecls(t, ds, "duration-300", durationProperty, "--tw-duration: 300ms;", "transition-duration: 300ms;")
+	expectDecls(t, ds, "duration-[1s]", durationProperty, "--tw-duration: 1s;", "transition-duration: 1s;")
+	expectDecls(t, ds, "duration-initial", "--tw-duration: initial;")
+	expectDecls(t, ds, "delay-[1s]", "transition-delay: 1s;")
+	expectDecls(t, ds, "ease-in-out", easeProperty, "--tw-ease: var(--ease-in-out);", "transition-timing-function: var(--ease-in-out);")
+	expectDecls(t, ds, "ease-linear", easeProperty, "--tw-ease: linear;", "transition-timing-function: linear;")
+	expectDecls(t, ds, "ease-initial", "--tw-ease: initial;")
+	expectInvalid(t, ds, "duration", "transition-nope", "transition-all/2")
 	expectDecls(t, ds, "animate-spin", "animation: var(--animate-spin);")
 	expectDecls(t, ds, "cursor-pointer", "cursor: pointer;")
 	expectDecls(t, ds, "select-none", "-webkit-user-select: none;", "user-select: none;")

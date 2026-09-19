@@ -339,8 +339,9 @@ export function isMathFunction(name: string): boolean {
 /**
  * Decodes an arbitrary value: `_` becomes a space except inside `url(...)`
  * (and `*_url(...)`), in the first argument of `var(...)` and `theme(...)`,
- * and when escaped as `\_`. Math operators inside math functions receive
- * surrounding spaces.
+ * and when escaped as `\_`. Nothing else suppresses the conversion: function
+ * names are decoded like words, so `&_svg:not(.x)` becomes `& svg:not(.x)`.
+ * Math operators inside math functions receive surrounding spaces.
  */
 export function decodeArbitraryValue(input: string): string {
   if (!input.includes("(")) {
@@ -398,6 +399,9 @@ function decodeNodes(nodes: ValueAstNode[]): void {
       decodeNodes(node.nodes.slice(firstComma));
       continue;
     }
+    // A function name is decoded like a word, so an arbitrary variant such as
+    // `[&_svg:not(.x)]` yields the selector `& svg:not(.x)`.
+    node.value = replaceUnderscores(name);
     decodeNodes(node.nodes);
   }
 }

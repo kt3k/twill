@@ -2,7 +2,7 @@
 
 type vnode = Word of word | Sep of string | Fn of fn
 and word = { mutable w : string }
-and fn = { fname : string; mutable fnodes : vnode list }
+and fn = { mutable fname : string; mutable fnodes : vnode list }
 
 let word s = Word { w = s }
 let sep s = Sep s

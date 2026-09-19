@@ -30,7 +30,9 @@ let run () =
     (fun (input, want) -> equal ("decode " ^ input) (decode_arbitrary_value input) want)
     [ ("10px_20px", "10px 20px"); ("a\\_b_c", "a_b c"); ("url(/a_b.png)", "url(/a_b.png)"); ("image_url(/a_b.png)", "image_url(/a_b.png)");
       ("var(--my_var)", "var(--my_var)"); ("var(--my_var,1px_2px)", "var(--my_var,1px 2px)"); ("var(--my\\_var)", "var(--my_var)");
-      ("theme(--spacing_x)", "theme(--spacing_x)"); ("calc(1px+2px)", "calc(1px + 2px)"); ("calc(1px_+_2px)", "calc(1px + 2px)");
+      ("theme(--spacing_x)", "theme(--spacing_x)"); ("&_svg", "& svg"); ("&_svg:not(.x)", "& svg:not(.x)");
+      ("&_svg:not([class*='size-'])", "& svg:not([class*='size-'])"); ("&_p:is(.a_.b)", "& p:is(.a .b)");
+      ("&\\_svg:not(.x)", "&_svg:not(.x)"); ("calc(1px+2px)", "calc(1px + 2px)"); ("calc(1px_+_2px)", "calc(1px + 2px)");
       ("calc(100%-var(--x))", "calc(100% - var(--x))"); ("calc(var(--x)*2)", "calc(var(--x) * 2)"); ("calc(1px*-1)", "calc(1px * -1)");
       ("min(1px,2px)", "min(1px,2px)"); ("rgb(0_0_0_/_0.5)", "rgb(0 0 0 / 0.5)"); ("calc(-1*var(--x))", "calc(-1 * var(--x))");
       ("'a_b'", "'a b'"); ("calc(1rem-2px)", "calc(1rem - 2px)"); ("min(100%,max-content)", "min(100%,max-content)");

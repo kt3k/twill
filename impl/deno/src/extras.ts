@@ -257,6 +257,25 @@ export function registerExtraUtilities(
   ]);
 
   // Layout.
+  // `@container`: `container-type`, with the modifier naming the container.
+  utilities.functional("@container", (candidate) => {
+    let value: string | null = null;
+    if (candidate.value === null) {
+      value = "inline-size";
+    } else if (candidate.value.kind === "arbitrary") {
+      value = candidate.value.value;
+    } else if (
+      candidate.value.value === "normal" || candidate.value.value === "size"
+    ) {
+      value = candidate.value.value;
+    }
+    if (value === null) return;
+    const nodes = [decl("container-type", value)];
+    if (candidate.modifier !== null) {
+      nodes.push(decl("container-name", candidate.modifier.value));
+    }
+    return nodes;
+  });
   stat("container", () => {
     const breakpoints: string[] = [];
     for (const [key, value] of theme.namespace("--breakpoint")) {

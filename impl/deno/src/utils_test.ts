@@ -78,6 +78,14 @@ Deno.test("decodeArbitraryValue", () => {
     decodeArbitraryValue("theme(--spacing_x)"),
     "theme(--spacing_x)",
   );
+  assertEquals(decodeArbitraryValue("&_svg"), "& svg");
+  assertEquals(decodeArbitraryValue("&_svg:not(.x)"), "& svg:not(.x)");
+  assertEquals(
+    decodeArbitraryValue("&_svg:not([class*='size-'])"),
+    "& svg:not([class*='size-'])",
+  );
+  assertEquals(decodeArbitraryValue("&_p:is(.a_.b)"), "& p:is(.a .b)");
+  assertEquals(decodeArbitraryValue("&\\_svg:not(.x)"), "&_svg:not(.x)");
   assertEquals(decodeArbitraryValue("calc(1px+2px)"), "calc(1px + 2px)");
   assertEquals(decodeArbitraryValue("calc(1px_+_2px)"), "calc(1px + 2px)");
   assertEquals(

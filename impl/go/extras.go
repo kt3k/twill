@@ -187,6 +187,25 @@ func RegisterExtraUtilities(u *Utilities, theme *Theme) {
 	stat("mix-blend-plus-lighter", [2]string{"mix-blend-mode", "plus-lighter"})
 
 	// Layout.
+	// `@container`: `container-type`, with the modifier naming the container.
+	u.Functional("@container", func(c *Candidate) ([]Node, CompileStatus) {
+		value := ""
+		switch {
+		case c.Value == nil:
+			value = "inline-size"
+		case c.Value.Kind == ValueArbitrary:
+			value = c.Value.Value
+		case c.Value.Value == "normal" || c.Value.Value == "size":
+			value = c.Value.Value
+		default:
+			return nil, NotHandled
+		}
+		nodes := []Node{Decl("container-type", value)}
+		if c.Modifier != nil {
+			nodes = append(nodes, Decl("container-name", c.Modifier.Value))
+		}
+		return nodes, Handled
+	}, nil)
 	statFn("container", func() []Node {
 		var breakpoints []string
 		for _, entry := range theme.Namespace("--breakpoint") {

@@ -931,8 +931,18 @@ export function registerBuiltinUtilities(
   });
 
   const transitionTail: Declarations = [
-    ["transition-timing-function", "var(--default-transition-timing-function)"],
-    ["transition-duration", "var(--default-transition-duration)"],
+    [
+      "transition-timing-function",
+      `var(--tw-ease, ${
+        theme.resolve(null, ["--default-transition-timing-function"]) ?? "ease"
+      })`,
+    ],
+    [
+      "transition-duration",
+      `var(--tw-duration, ${
+        theme.resolve(null, ["--default-transition-duration"]) ?? "0s"
+      })`,
+    ],
   ];
   const transitionProperties = [
     "color",
@@ -959,40 +969,40 @@ export function registerBuiltinUtilities(
     "overlay",
     "pointer-events",
   ];
-  stat("transition", [
-    ["transition-property", transitionProperties.join(", ")],
-    ...transitionTail,
-  ]);
-  stat("transition-none", [["transition-property", "none"]]);
-  stat("transition-all", [["transition-property", "all"], ...transitionTail]);
-  stat("transition-colors", [
-    [
-      "transition-property",
-      "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to",
-    ],
-    ...transitionTail,
-  ]);
-  stat("transition-opacity", [
-    ["transition-property", "opacity"],
-    ...transitionTail,
-  ]);
-  stat("transition-shadow", [
-    ["transition-property", "box-shadow"],
-    ...transitionTail,
-  ]);
-  stat("transition-transform", [
-    ["transition-property", "transform, translate, scale, rotate"],
-    ...transitionTail,
-  ]);
+  const withTransitionTail = (property: string): AstNode[] => [
+    decl("transition-property", property),
+    ...transitionTail.map(([name, value]) => decl(name, value)),
+  ];
+  fn("transition", {
+    themeKeys: ["--transition-property"],
+    defaultValue: transitionProperties.join(", "),
+    staticValues: {
+      none: [decl("transition-property", "none")],
+      all: withTransitionTail("all"),
+      colors: withTransitionTail(
+        "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to",
+      ),
+      opacity: withTransitionTail("opacity"),
+      shadow: withTransitionTail("box-shadow"),
+      transform: withTransitionTail("transform, translate, scale, rotate"),
+    },
+    handle: withTransitionTail,
+  });
   stat("transition-discrete", [["transition-behavior", "allow-discrete"]]);
   stat("transition-normal", [["transition-behavior", "normal"]]);
 
   fn("duration", {
     themeKeys: ["--transition-duration"],
+    defaultValue: null,
+    staticValues: { initial: [decl("--tw-duration", "initial")] },
     handleBareValue: (
       value,
     ) => (isPositiveInteger(value.value) ? `${value.value}ms` : null),
-    handle: single("transition-duration"),
+    handle: (value) => [
+      propertyRegistration("--tw-duration"),
+      decl("--tw-duration", value),
+      decl("transition-duration", value),
+    ],
   });
   fn("delay", {
     themeKeys: ["--transition-delay"],
@@ -1001,11 +1011,18 @@ export function registerBuiltinUtilities(
     ) => (isPositiveInteger(value.value) ? `${value.value}ms` : null),
     handle: single("transition-delay"),
   });
-  stat("ease-linear", [["transition-timing-function", "linear"]]);
-  stat("ease-initial", [["transition-timing-function", "initial"]]);
+  const easeHandle = (value: string): AstNode[] => [
+    propertyRegistration("--tw-ease"),
+    decl("--tw-ease", value),
+    decl("transition-timing-function", value),
+  ];
   fn("ease", {
     themeKeys: ["--ease"],
-    handle: single("transition-timing-function"),
+    staticValues: {
+      linear: easeHandle("linear"),
+      initial: [decl("--tw-ease", "initial")],
+    },
+    handle: easeHandle,
   });
 
   stat("animate-none", [["animation", "none"]]);

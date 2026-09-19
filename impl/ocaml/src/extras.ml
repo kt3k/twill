@@ -114,6 +114,22 @@ let register u theme =
   stat "mix-blend-plus-darker" [ ("mix-blend-mode", "plus-darker") ];
   stat "mix-blend-plus-lighter" [ ("mix-blend-mode", "plus-lighter") ];
   (* Layout. *)
+  (* [@container]: [container-type], with the modifier naming the container. *)
+  functional u "@container" (fun c ->
+      let value =
+        match c.cvalue with
+        | None -> Some "inline-size"
+        | Some { vkind = Arbitrary; value; _ } -> Some value
+        | Some { value = "normal"; _ } -> Some "normal"
+        | Some { value = "size"; _ } -> Some "size"
+        | Some _ -> None
+      in
+      match value with
+      | None -> not_handled
+      | Some value ->
+          let nodes = [ decl "container-type" value ] in
+          let nodes = match c.cmodifier with Some m -> nodes @ [ decl "container-name" m.mvalue ] | None -> nodes in
+          handled nodes);
   stat_fn "container" (fun () ->
       let breakpoints =
         List.filter_map
