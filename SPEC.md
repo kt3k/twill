@@ -280,13 +280,23 @@ Returned by `compile` (Section 15.1).
     inside single or double quotes, and immediately after a backslash. A closing bracket pops the
     stack only when it matches the most recent opener.
 - `decodeArbitraryValue(input)`
+  - Every unescaped `_` becomes a space and every `\_` becomes a literal `_`, regardless of what
+    surrounds it. The only exceptions are listed below; the presence of parentheses, brackets,
+    quotes, or selector syntax elsewhere in the value MUST NOT suppress the conversion.
   - When `input` contains no `(`: replace `\_` with `_` and every other `_` with a space.
-  - Otherwise parse the value into words, separators, and function calls. Inside `url(...)` (and
-    any function whose name ends in `_url`) nothing is replaced. Inside `var(...)` and
-    `theme(...)` the first argument keeps its underscores (only `\_` is unescaped); other arguments
-    are decoded recursively. Everywhere else `_` becomes a space. Finally insert spaces around
-    `+`, `-`, `*`, and `/` inside math functions (`calc`, `min`, `max`, `clamp`, and similar) when
-    they act as operators, so `calc(1px+2px)` becomes `calc(1px + 2px)`.
+  - Otherwise parse the value into words, separators, and function calls and decode each node.
+    Function names are decoded like words. Inside `url(...)` (and any function whose name ends
+    in `_url`) nothing is replaced. Inside `var(...)` and `theme(...)` the first argument keeps
+    its underscores (only `\_` is unescaped); other arguments are decoded recursively. Every other
+    function's arguments, including the arguments of selector pseudo-classes such as `:not(...)`,
+    `:is(...)`, and `:where(...)` and the contents of attribute selectors such as
+    `[class*='size-']`, are decoded recursively. Finally insert spaces around `+`, `-`, `*`, and
+    `/` inside math functions (`calc`, `min`, `max`, `clamp`, and similar) when they act as
+    operators, so `calc(1px+2px)` becomes `calc(1px + 2px)`.
+  - Examples: `&_svg` becomes `& svg`; `&_svg:not(.x)` becomes `& svg:not(.x)`;
+    `&_svg:not([class*='size-'])` becomes `& svg:not([class*='size-'])`; `url(/a_b.png)` stays
+    `url(/a_b.png)`; `var(--my_var)` stays `var(--my_var)`; `hello\_world` becomes
+    `hello_world`.
 - `isValidArbitrary(input)`
   - Track `(` and `[` on a stack. Return false on a closing `)`, `]`, or `}` with an empty stack,
     on a mismatched closer, or on a top-level `;`. Quoted text and backslash-escaped characters are
@@ -760,9 +770,10 @@ designed so that at most one does.
 ### 8.3 `parseVariant(input)` Algorithm
 
 1. Arbitrary variant (`[...]`): a value starting with `@` that also contains `&` is null. Decode
-   the contents; they MUST satisfy `isValidArbitrary` and be non-empty. `relative` is true when the
-   selector starts with `>`, `+`, or `~`. When the selector is not relative, does not start with
-   `@`, and contains no `&`, wrap it as `&:is(<selector>)`.
+   the contents with `decodeArbitraryValue` (so `[&_svg:not(.x)]` yields the selector
+   `& svg:not(.x)`); they MUST satisfy `isValidArbitrary` and be non-empty. `relative` is true when
+   the selector starts with `>`, `+`, or `~`. When the selector is not relative, does not start
+   with `@`, and contains no `&`, wrap it as `&:is(<selector>)`.
 2. `parts = segment(input, "/")`; three or more parts is null. The first part is the name; the
    second, if present, is the modifier text.
 3. For each `(root, value)` from `findRoots(name, variantExists)`, branch on the registered kind:
@@ -1102,6 +1113,13 @@ Layout:
   `inset-inline-start`, `inset-inline-end`, `top`, `right`, `bottom`, `left`; negative and
   fractions supported; plus static `<name>-auto`, `<name>-full` (`100%`), `-<name>-full`
   (`-100%`).
+- `@container`: `container-type: inline-size`. `@container-normal` and `@container-size` set
+  `container-type` to `normal` and `size`; an arbitrary value (`@container-[<v>]`) is used
+  verbatim; any other named value produces no output. A modifier names the container: the
+  declarations become `container-type: <value>; container-name: <modifier>` (for example
+  `@container/card-header` gives `container-type: inline-size; container-name: card-header`). The
+  modifier text is used as is, whether named or arbitrary. The named container is then queried
+  with the `@<w>/<name>`, `@min-<w>/<name>`, and `@max-<w>/<name>` variants (Section 9.5).
 - `z-<n>`: `z-index` (`--z-index`); bare non-negative integers; negative supported; `z-auto`.
 - `order-<n>`: `order` (`--order`); bare non-negative integers; negative supported;
   `order-first` is `-9999`, `order-last` is `9999`.
@@ -1211,16 +1229,34 @@ Effects, transitions, interactivity:
 
 - `opacity-<n>`: `opacity` (`--opacity`); a bare value that is a multiple of 0.25 becomes
   `<n>%`.
-- `transition`: `transition-property: color, background-color, border-color, outline-color,
-  text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to,
-  opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter,
-  backdrop-filter, display, content-visibility, overlay, pointer-events` followed by
-  `transition-timing-function: var(--default-transition-timing-function)` and
-  `transition-duration: var(--default-transition-duration)`; `transition-none`,
-  `transition-all`, `transition-colors`, `transition-opacity`, `transition-shadow`,
-  `transition-transform` select subsets.
-- `duration-<n>`: `transition-duration: <n>ms` (`--transition-duration`); `delay-<n>` likewise;
-  `ease-*`: `transition-timing-function` (`--ease`); `ease-linear`, `ease-initial`.
+- `transition`: a `functionalUtility` (`--transition-property`) whose `handle` emits
+  `transition-property: <value>` followed by `transition-timing-function: <TIMING>` and
+  `transition-duration: <DURATION>`, where `TIMING` is
+  `var(--tw-ease, var(--default-transition-timing-function))` (falling back to
+  `var(--tw-ease, ease)` when the theme has no `--default-transition-timing-function`) and
+  `DURATION` is `var(--tw-duration, var(--default-transition-duration))` (falling back to
+  `var(--tw-duration, 0s)`). The default value (bare `transition`) is `color, background-color,
+  border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from,
+  --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate,
+  filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay,
+  pointer-events`. Because it is a `functionalUtility`, an arbitrary value is passed to `handle`
+  unchanged, so `transition-[color,box-shadow]` emits `transition-property: color,box-shadow`
+  together with the timing and duration declarations, and a named value resolves through
+  `--transition-property`. The static values `none` (`transition-property: none` only), `all`,
+  `colors` (`color, background-color, border-color, outline-color, text-decoration-color, fill,
+  stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to`), `opacity`, `shadow`
+  (`box-shadow`), and `transform` (`transform, translate, scale, rotate`) select subsets; each
+  except `none` also emits the timing and duration declarations.
+- `transition-discrete`, `transition-normal`: `transition-behavior: allow-discrete | normal`.
+- `duration-<n>`: emits `at-root @property --tw-duration`, `--tw-duration: <v>`, and
+  `transition-duration: <v>`; a named value resolves through `--transition-duration`, a bare
+  non-negative integer becomes `<n>ms`, an arbitrary value is used verbatim; a modifier or a
+  missing value produces no output. `duration-initial` emits `--tw-duration: initial` only.
+- `delay-<n>`: `transition-delay` (`--transition-delay`); a bare non-negative integer becomes
+  `<n>ms`.
+- `ease-*`: a `functionalUtility` (`--ease`) emitting `at-root @property --tw-ease`,
+  `--tw-ease: <v>`, and `transition-timing-function: <v>`; `ease-linear` uses `linear`;
+  `ease-initial` emits `--tw-ease: initial` only.
 - `animate-*`: `animation` (`--animate`); `animate-none`.
 - `cursor-*`, `select-{none,text,all,auto}`, `pointer-events-{none,auto}`, `resize`,
   `resize-{none,x,y}`, `appearance-{none,auto}`, `scroll-{auto,smooth}`, `will-change-*`,
@@ -2147,6 +2183,12 @@ z-10                 z-index: 10;
 -z-10                z-index: calc(10 * -1);
 flex-1               flex: 1;
 opacity-50           opacity: 50%;
+@container           container-type: inline-size;
+@container/card      container-type: inline-size; container-name: card;
+transition-[color,box-shadow]
+                     transition-property: color,box-shadow;
+                     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+                     transition-duration: var(--tw-duration, var(--default-transition-duration));
 [mask-type:luminance] mask-type: luminance;
 [--my-var:1px]       --my-var: 1px;
 underline!           text-decoration-line: underline !important;
@@ -2175,6 +2217,7 @@ data-[state=open]:flex .data-\[state\=open\]\:flex[data-state="open"]
 aria-checked:flex      .aria-checked\:flex[aria-checked="true"]
 nth-3:flex             .nth-3\:flex:nth-child(3)
 [&_p]:flex             .\[\&_p\]\:flex p
+[&_svg:not(.x)]:flex   .\[\&_svg\:not\(\.x\)\]\:flex svg:not(.x)
 [@media(width>=100px)]:flex   @media (width>=100px) { ... }
 *:flex                 :is(.\*\:flex > *)
 before:block           .before\:block::before { content: var(--tw-content); display: block; }
@@ -2287,6 +2330,8 @@ specification.
 - Prefix enforcement when a prefix is configured
 - `findRoots` yields every valid split and stops on an empty remainder
 - Underscore decoding, `\_`, `url()` and `var()` exemptions, and math operator spacing
+- Underscores inside arbitrary variants are decoded even when the selector contains
+  parentheses or attribute selectors (`[&_svg:not(.x)]`, `[&_svg:not([class*='size-'])]`)
 
 ### 17.4 Variants and Utilities
 
@@ -2299,6 +2344,8 @@ specification.
   negative, fraction, and default forms
 - Opacity modifiers use `color-mix` and reject non-quarter values
 - `text-*` line-height modifiers and `bg-*` type inference
+- `@container` with `normal`, `size`, arbitrary values, and a name modifier
+- `transition-[...]` arbitrary values and the `--tw-ease` / `--tw-duration` fallbacks
 
 ### 17.5 Compilation and Output
 
