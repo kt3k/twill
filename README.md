@@ -1,6 +1,4 @@
-<p align="center"><img src="./logo-wordmark.svg" width="320" alt="twill"></p>
-
-# twill
+<p><img src="./logo-wordmark.svg" width="140" alt="twill"></p>
 
 > tailwind compatible tool
 
