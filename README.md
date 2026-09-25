@@ -1,4 +1,4 @@
-<p align="center"><img src="./logo.svg" width="128" height="128" alt="twill logo"></p>
+<p align="center"><img src="./logo-wordmark.svg" width="320" alt="twill"></p>
 
 # twill
 
